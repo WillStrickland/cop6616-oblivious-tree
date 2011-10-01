@@ -9,12 +9,10 @@ package oblivious.trees;
  * @author ch647274
  */
 public class Delta implements Comparable {
-    
-    public int compareTo(Delta d)
-    {
-        int result = 1;
-        
-        return result;
+
+    @Override
+    public int compareTo(Object o) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }
