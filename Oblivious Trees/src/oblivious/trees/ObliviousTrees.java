@@ -6,7 +6,7 @@ package oblivious.trees;
 
 /**
  *
- * author...
+ * William Strickland and Chris Fontaine
  */
 public class ObliviousTrees {
 
