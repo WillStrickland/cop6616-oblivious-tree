@@ -90,4 +90,11 @@ public class TwoThreeTreeNode
         
         return result;
     }
+    
+    public String toString()
+    {
+        String description = "";
+        
+        return description;
+    }
 }
