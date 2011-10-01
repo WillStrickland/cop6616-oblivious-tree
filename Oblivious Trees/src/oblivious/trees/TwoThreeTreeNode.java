@@ -9,12 +9,12 @@ package oblivious.trees;
  * @author ch647274
  */
 public class TwoThreeTreeNode 
-{
-    
+{    
     private TwoThreeTreeNode parent;
     private TwoThreeTreeNode leftChild;
     private TwoThreeTreeNode middleChild;
     private TwoThreeTreeNode rightChild;
+    private int degree;
     
     private String delta1;
     private String delta2;
@@ -50,8 +50,14 @@ public class TwoThreeTreeNode
         return data;
     }
     
+    public int getDegree()
+    {
+        return this.degree;
+    }
     
-    
-    
-    
+        
+    public void setData()
+    {
+        
+    }                                
 }
