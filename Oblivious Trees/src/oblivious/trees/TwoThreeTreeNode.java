@@ -8,9 +8,50 @@ package oblivious.trees;
  *
  * @author ch647274
  */
-public class TwoThreeTreeNode {
+public class TwoThreeTreeNode 
+{
     
-    //This is a test of project commit to Google Code
-    //Test #2 for the sake of commenting
+    private TwoThreeTreeNode parent;
+    private TwoThreeTreeNode leftChild;
+    private TwoThreeTreeNode middleChild;
+    private TwoThreeTreeNode rightChild;
+    
+    private String delta1;
+    private String delta2;
+    
+    public TwoThreeTreeNode()
+    {
+        
+    }
+    
+    public TwoThreeTreeNode getParent()
+    {
+        return this.parent;
+    }
+    
+    public TwoThreeTreeNode[] getChildren()
+    {
+        TwoThreeTreeNode[] children = new TwoThreeTreeNode[3];
+        
+        children[0] = this.leftChild;
+        children[1] = this.middleChild;
+        children[2] = this.rightChild;
+                
+        return children;
+    }
+    
+    public String[] getDeltas()
+    {
+        String[] data = new String[2];
+        
+        data[0] = this.delta1;
+        data[1] = this.delta2;
+                
+        return data;
+    }
+    
+    
+    
+    
     
 }
