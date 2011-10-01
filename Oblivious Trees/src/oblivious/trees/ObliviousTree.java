@@ -6,7 +6,7 @@ package oblivious.trees;
 
 /**
  *
- * Author(s): William Strickland and Christopher 
+ * William Strickland and Chris Fontaine
  */
 public class ObliviousTree {
 
@@ -14,7 +14,6 @@ public class ObliviousTree {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
-        // This is a test of Subversion on NetBeans
+        System.out.println("Hello World");
     }
 }
