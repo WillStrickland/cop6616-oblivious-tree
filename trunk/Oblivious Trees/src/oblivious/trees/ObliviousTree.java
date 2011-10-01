@@ -6,9 +6,9 @@ package oblivious.trees;
 
 /**
  *
- * William Strickland and Chris Fontaine
+ * Author(s): William Strickland and Christopher Fontaine
  */
-public class ObliviousTrees {
+public class ObliviousTree {
 
     /**
      * @param args the command line arguments
