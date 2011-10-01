@@ -16,6 +16,9 @@ public class TwoThreeTreeNode
     private TwoThreeTreeNode rightChild;
     private int degree;
     
+    //implement delta as Comparable
+    //compare() returns based on position
+    //equals() returns based on position and value
     private String[] deltas;
     private int datalen;
     
