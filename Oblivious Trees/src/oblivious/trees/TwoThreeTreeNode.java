@@ -19,12 +19,12 @@ public class TwoThreeTreeNode
     //implement delta as Comparable
     //compare() returns based on position
     //equals() returns based on position and value
-    private Delta[] deltas;
+    private FileChunk[] deltas;
     private int datalen;
     
     public TwoThreeTreeNode()
     {
-        deltas = new Delta[2];
+        deltas = new FileChunk[2];
         datalen = -1;
     }
     
@@ -44,7 +44,7 @@ public class TwoThreeTreeNode
         return children;
     }
     
-    public Delta[] getDeltas()
+    public FileChunk[] getDeltas()
     {                
         return this.deltas;
     }
@@ -55,7 +55,7 @@ public class TwoThreeTreeNode
     }
     
         
-    public boolean setDelta(Delta delta)
+    public boolean setDelta(FileChunk delta)
     {
         boolean result;
         
