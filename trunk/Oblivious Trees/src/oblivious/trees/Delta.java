@@ -8,9 +8,13 @@ package oblivious.trees;
  *
  * @author ch647274
  */
-public class TwoThreeTree {
+public class Delta implements Comparable {
     
-    //This is a test of project commit to Google Code
-    //Test #2 for the sake of commenting
+    public int compareTo(Delta d)
+    {
+        int result = 1;
+        
+        return result;
+    }
     
 }

@@ -19,12 +19,12 @@ public class TwoThreeTreeNode
     //implement delta as Comparable
     //compare() returns based on position
     //equals() returns based on position and value
-    private String[] deltas;
+    private Delta[] deltas;
     private int datalen;
     
     public TwoThreeTreeNode()
     {
-        deltas = new String[2];
+        deltas = new Delta[2];
         datalen = -1;
     }
     
@@ -44,7 +44,7 @@ public class TwoThreeTreeNode
         return children;
     }
     
-    public String[] getDeltas()
+    public Delta[] getDeltas()
     {                
         return this.deltas;
     }
@@ -55,7 +55,7 @@ public class TwoThreeTreeNode
     }
     
         
-    public boolean setDelta(String delta)
+    public boolean setDelta(Delta delta)
     {
         boolean result;
         
