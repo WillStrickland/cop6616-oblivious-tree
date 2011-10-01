@@ -6,7 +6,7 @@ package oblivious.trees;
 
 /**
  *
- * Will WAS HERE!
+ * author...
  */
 public class ObliviousTrees {
 
