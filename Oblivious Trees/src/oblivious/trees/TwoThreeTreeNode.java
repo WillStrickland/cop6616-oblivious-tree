@@ -28,8 +28,13 @@ public class TwoThreeTreeNode
         datalen = -1;
     }
     
+    /**
+     * Returns the parent for the 2-3 Tree Node
+     * @return TwoThreeTreeNode
+     */
     public TwoThreeTreeNode getParent()
     {
+        
         return this.parent;
     }
     
@@ -54,7 +59,11 @@ public class TwoThreeTreeNode
         return this.degree;
     }
     
-        
+    /**
+     * Sets a FileChunk in the data field of a 2-3 Tree
+     * @param FileChunk piece
+     * @return boolean result
+     */    
     public boolean setPiece(FileChunk piece)
     {
         boolean result;
