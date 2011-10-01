@@ -19,12 +19,12 @@ public class TwoThreeTreeNode
     //implement delta as Comparable
     //compare() returns based on position
     //equals() returns based on position and value
-    private FileChunk[] deltas;
-    private int datalen;
+    private FileChunk[] pieces;
+    private int datalen; 
     
     public TwoThreeTreeNode()
     {
-        deltas = new FileChunk[2];
+        pieces = new FileChunk[2];
         datalen = -1;
     }
     
@@ -44,9 +44,9 @@ public class TwoThreeTreeNode
         return children;
     }
     
-    public FileChunk[] getDeltas()
+    public FileChunk[] getPieces()
     {                
-        return this.deltas;
+        return this.pieces;
     }
     
     public int getDegree()
@@ -55,7 +55,7 @@ public class TwoThreeTreeNode
     }
     
         
-    public boolean setDelta(FileChunk delta)
+    public boolean setPiece(FileChunk piece)
     {
         boolean result;
         
@@ -66,7 +66,7 @@ public class TwoThreeTreeNode
         else
         {
             this.datalen++;
-            this.deltas[this.datalen] = delta;
+            this.pieces[this.datalen] = piece;
             result = true;
         }
         
@@ -83,7 +83,7 @@ public class TwoThreeTreeNode
         }
         else
         {
-            this.deltas[this.datalen] = null;
+            this.pieces[this.datalen] = null;
             this.datalen--;
             result = true;
         }
