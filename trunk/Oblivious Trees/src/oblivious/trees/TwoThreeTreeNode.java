@@ -16,12 +16,13 @@ public class TwoThreeTreeNode
     private TwoThreeTreeNode rightChild;
     private int degree;
     
-    private String delta1;
-    private String delta2;
+    private String[] deltas;
+    private int datalen;
     
     public TwoThreeTreeNode()
     {
-        
+        deltas = new String[2];
+        datalen = -1;
     }
     
     public TwoThreeTreeNode getParent()
@@ -41,13 +42,8 @@ public class TwoThreeTreeNode
     }
     
     public String[] getDeltas()
-    {
-        String[] data = new String[2];
-        
-        data[0] = this.delta1;
-        data[1] = this.delta2;
-                
-        return data;
+    {                
+        return this.deltas;
     }
     
     public int getDegree()
@@ -56,8 +52,39 @@ public class TwoThreeTreeNode
     }
     
         
-    public void setData()
+    public boolean setDelta(String delta)
     {
+        boolean result;
         
-    }                                
+        if(this.datalen >= 1)
+        {
+            result = false;
+        }
+        else
+        {
+            this.datalen++;
+            this.deltas[this.datalen] = delta;
+            result = true;
+        }
+        
+        return result;
+    }
+    
+    public boolean removeDelta()
+    {
+        boolean result;
+        
+        if(this.datalen < 0)
+        {
+            result = false;
+        }
+        else
+        {
+            this.deltas[this.datalen] = null;
+            this.datalen--;
+            result = true;
+        }
+        
+        return result;
+    }
 }
