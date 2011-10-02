@@ -19,12 +19,12 @@ public class TwoThreeTreeNode
     //implement delta as Comparable
     //compare() returns based on position
     //equals() returns based on position and value
-    private FileChunk[] pieces;
+    private Byte[] pieces;
     private int datalen; 
     
     public TwoThreeTreeNode()
     {
-        pieces = new FileChunk[2];
+        pieces = new Byte[2];
         datalen = -1;
     }
     
@@ -49,7 +49,7 @@ public class TwoThreeTreeNode
         return children;
     }
     
-    public FileChunk[] getPieces()
+    public Byte[] getPieces()
     {                
         return this.pieces;
     }
@@ -64,7 +64,7 @@ public class TwoThreeTreeNode
      * @param FileChunk piece
      * @return boolean result
      */    
-    public boolean setPiece(FileChunk piece)
+    public boolean setPiece(Byte piece)
     {
         boolean result;
         
