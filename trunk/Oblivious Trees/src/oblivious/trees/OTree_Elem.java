@@ -20,14 +20,34 @@ public class OTree_Elem {
 	// Mutators
 	public boolean addChild(OTree_Elem c){
 		boolean success = false;
+		if (c==null)
+			return false;
 		for (int i=0; i<OTree_Elem.MAX_CHILDREN; i++){
 			if (this.children[i] == null){
 				this.children[i] = c;
 				c.parent = this;
 				success = true;
+				break;
 			}
 		}
 		return success;
+	}
+	public boolean removeChild(int i){
+		if (this.children[i] == null){
+			this.children[i] = null;
+			this.degree--;
+			return true;
+		} else {
+			return false;
+		}
+	}
+	protected boolean swapChildren(int i, int j){
+		if (i>0 || j<0 || i> OTree_Elem.MAX_CHILDREN || j> OTree_Elem.MAX_CHILDREN)
+			return false;
+		OTree_Elem tmp = this.children[i];
+		this.children[i] = this.children[j];
+		this.children[j] = tmp;
+		return true;	
 	}
 	
 	// Inspectors
