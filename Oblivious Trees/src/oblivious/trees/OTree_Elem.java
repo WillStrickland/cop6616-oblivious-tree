@@ -1,11 +1,10 @@
 package oblivious.trees;
 
-public class OTree_Elem {
+public abstract class OTree_Elem {
 	final static int MAX_CHILDREN = 3;
 	// Instance properties
 	protected OTree_Elem parent;
 	protected OTree_Elem[] children;
-	private int degree;
 	
 	// Constructors
 	public OTree_Elem(){
@@ -14,7 +13,6 @@ public class OTree_Elem {
 		for (int i=0; i<OTree_Elem.MAX_CHILDREN; i++){
 			children[i] = null;
 		}
-		degree = 0;
 	}
 	
 	// Mutators
@@ -48,15 +46,7 @@ public class OTree_Elem {
 		this.children[j] = tmp;
 		return true;	
 	}
-	protected void calcDegree(){
-		this.degree = 0;
-		for (int i=0; i<OTree_Elem.MAX_CHILDREN; i++){
-			if (children[i] != null){
-				children[i].calcDegree();
-				degree += children[i].getDegree();
-			}
-		}
-	}
+	abstract void calcDegree();
 	protected void trickleDegree(){
 		OTree_Elem tmp = this.parent;
 		while (tmp != null){
@@ -66,9 +56,7 @@ public class OTree_Elem {
 	}
 	
 	// Inspectors
-	public int getDegree(){
-		return this.degree;
-	}
+	abstract int getDegree();
 	public OTree_Elem getParent(){
 		return this.parent;
 	}
