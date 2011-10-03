@@ -35,7 +35,6 @@ public class OTree_Elem {
 	public boolean removeChild(int i){
 		if (this.children[i] == null){
 			this.children[i] = null;
-			this.degree--;
 			return true;
 		} else {
 			return false;
@@ -49,10 +48,29 @@ public class OTree_Elem {
 		this.children[j] = tmp;
 		return true;	
 	}
+	protected void calcDegree(){
+		this.degree = 0;
+		for (int i=0; i<OTree_Elem.MAX_CHILDREN; i++){
+			if (children[i] != null){
+				children[i].calcDegree();
+				degree += children[i].getDegree();
+			}
+		}
+	}
+	protected void trickleDegree(){
+		OTree_Elem tmp = this.parent;
+		while (tmp != null){
+			tmp.calcDegree();
+			tmp = tmp.parent;
+		}
+	}
 	
 	// Inspectors
 	public int getDegree(){
 		return this.degree;
+	}
+	public OTree_Elem getParent(){
+		return this.parent;
 	}
 	public OTree_Elem getChild(int i){
 		return this.children[i];
@@ -64,8 +82,4 @@ public class OTree_Elem {
 		}
 		return tmp;
 	}
-
-	
-	
-	
 }
