@@ -5,7 +5,7 @@ public class OTree_Leaf {
 	// Instance Variable
 	byte[] data;
 	
-	// override 
+	// Inspectors
 	public int getDegree(){
 		return 1; 
 	}
