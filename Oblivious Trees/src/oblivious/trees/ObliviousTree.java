@@ -10,9 +10,6 @@ package oblivious.trees;
  */
 public class ObliviousTree {
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
         System.out.println("Hello World");
     }

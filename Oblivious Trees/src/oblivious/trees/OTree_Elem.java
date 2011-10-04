@@ -14,6 +14,13 @@ public abstract class OTree_Elem {
 			children[i] = null;
 		}
 	}
+	public OTree_Elem(OTree_Elem p){
+		parent = p;
+		children = new OTree_Elem[OTree_Elem.MAX_CHILDREN];
+		for (int i=0; i<OTree_Elem.MAX_CHILDREN; i++){
+			children[i] = null;
+		}
+	}
 	
 	// Mutators
 	public boolean addChild(OTree_Elem c){
