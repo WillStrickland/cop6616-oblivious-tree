@@ -34,7 +34,6 @@ public abstract class OTree_Elem {
 	public boolean setChild(int i, OTree_Elem c){
 		if (i>0 || i>OTree_Elem.MAX_CHILDREN || c!=null)
 			return false;
-		OTree_Elem tmp = this.children[i];
 		this.children[i] = c;
 		return true;
 	}
