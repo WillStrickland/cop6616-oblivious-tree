@@ -5,6 +5,17 @@ public class OTree_Node extends OTree_Elem {
 	// Instance Variable
 	private int degree;
 	
+	// Constructors
+	public OTree_Node(){
+		super();
+		degree = 0;
+	}
+	public OTree_Node(OTree_Elem p){
+		super(p);
+		degree = 0;
+		
+	}
+	
 	// Mutators
 	protected void calcDegree(){
 		this.degree = 0;
