@@ -23,6 +23,21 @@ public abstract class OTree_Elem {
 	}
 	
 	// Mutators
+	public boolean setParent(OTree_Elem p){
+		if (p != null){
+			this.parent = p;
+			return true;
+		} else {
+			return false;
+		}
+	}
+	public boolean setChild(int i, OTree_Elem c){
+		if (i>0 || i>OTree_Elem.MAX_CHILDREN || c!=null)
+			return false;
+		OTree_Elem tmp = this.children[i];
+		this.children[i] = c;
+		return true;
+	}
 	public boolean addChild(OTree_Elem c){
 		boolean success = false;
 		if (c==null)
@@ -46,12 +61,12 @@ public abstract class OTree_Elem {
 		}
 	}
 	protected boolean swapChildren(int i, int j){
-		if (i>0 || j<0 || i> OTree_Elem.MAX_CHILDREN || j> OTree_Elem.MAX_CHILDREN)
+		if (i>0 || j<0 || i>OTree_Elem.MAX_CHILDREN || j>OTree_Elem.MAX_CHILDREN)
 			return false;
 		OTree_Elem tmp = this.children[i];
 		this.children[i] = this.children[j];
 		this.children[j] = tmp;
-		return true;	
+		return true;
 	}
 	abstract void calcDegree();
 	protected void trickleDegree(){
