@@ -4,6 +4,7 @@
  */
 package oblivious.trees;
 import java.util.Random;
+import java.util.Arrays;
 /**
  *
  * William Strickland and Chris Fontaine
@@ -23,47 +24,62 @@ public class ObliviousTree {
    */
    
    private OTree_Node root;
-   private Vector fileChunks;
+   private Vector treeNodes;
    
   public ObliviousTree(byte[] file)
   {    
     //1). Instantiate root node
     root = new OTree_Node();
-    fileChunks = new Vector<OTree_Leaf>();
+    fileChunks = new Vector<OTree_Elem>();
     
-    //2). Generate leaf nodes from the byte array
-    for(int read = 0; read < file.length; read += 10)
-    {
-        OTree_Leaf chunk = new OTree_Leaf(copyOfRange(file, read, read + 10));
-        fileChunks.addElement(chunk);
-    }
-    
+    //2). Generate leaf nodes from the byte array           
     //3). Create Oblivious Tree
-    create(file);
+    generateLeaves(file);
+    create();
   }
   
   /**
+   * @param byte[] file
+   * @return void
    * Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
-   * and, after taking a number between two and three, generate a number of non-leaf, which 
+   * and, after taking a number between two and three, generate a number of non-leaf, which
    * is randomly chosen between 2 and 3.
    */
-  private void create(byte[] file)
+  private void create()
   {
     Random rand = new Random();
     
     int degree = 0;
     int size = file.length;
+    var treeNode;
     
-    for(int list = 0; list < size - 1; list += degree)
-    {
-      degree = 2 + rand.nextInt(3);
-      
-      
-    }
+    //do until there is only 1 node left
+      nodesOnLevel = treeNodes.size;
+      treeNode = new OTree_Node();
+      for(int list = 0; list < nodesOnLevel)
+      {
+        degree = 2 + rand.nextInt(3);               
+        
+       
+      }
   }
   
+  private void generateLeaves(byte[] file)
+  {
+      long byteLen = file.length;
+      long bytesRead = 0
+    
+      while(bytesRead < byteLen)
+      {
+        treeNodes.addElement(new OTree_Leaf(copyOfRange(file, bytesRead, bytesRead + 10));
+        bytesRead += 10;
+      } 
+  }
+  
+  
   public void add(OTree_Leaf newLeaf)
-  {}
+  {
+  }
   
   public OTree_Leaf delete()
   {
