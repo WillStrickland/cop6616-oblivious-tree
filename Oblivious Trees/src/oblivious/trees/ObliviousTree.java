@@ -11,7 +11,7 @@ import java.util.Vector;
 
 public class ObliviousTree {
 
-	//
+	/*
 	public static void main(String[] args) {
 		System.out.println("Hello, World!!!");
 		System.out.println("chunkSize = "+ObliviousTree.getChunkSize());
@@ -67,6 +67,8 @@ public class ObliviousTree {
 		if (rndSrc==null){
 			try {
 				rndSrc = SecureRandom.getInstance("SHA1PRNG");
+				byte[] b = new byte[1];
+				rndSrc.nextBytes(b);
 			} catch (NoSuchAlgorithmException e){
 				return false;
 			}
