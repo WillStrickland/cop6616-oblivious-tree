@@ -27,18 +27,26 @@ public class ObliviousTree {
    
   public ObliviousTree(byte[] file)
   {    
+    //1). Instantiate root node
     root = new OTree_Node();
     fileChunks = new Vector<OTree_Leaf>();
     
-    for(int read = 0; read < file.length - 1; read += 10)
+    //2). Generate leaf nodes from the byte array
+    for(int read = 0; read < file.length; read += 10)
     {
         OTree_Leaf chunk = new OTree_Leaf(copyOfRange(file, read, read + 10));
         fileChunks.addElement(chunk);
     }
     
+    //3). Create Oblivious Tree
     create(file);
   }
   
+  /**
+   * Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
+   * and, after taking a number between two and three, generate a number of non-leaf, which 
+   * is randomly chosen between 2 and 3.
+   */
   private void create(byte[] file)
   {
     Random rand = new Random();
@@ -52,6 +60,16 @@ public class ObliviousTree {
       
       
     }
+  }
+  
+  public void add(OTree_Leaf newLeaf)
+  {}
+  
+  public OTree_Leaf delete()
+  {
+     OTree_Leaf = deletedNode;
+     
+     return deletedNode;
   }
   
   
