@@ -17,12 +17,15 @@ public class ObliviousTree {
 	/*
 	public static void main(String[] args) {
 		System.out.println("Hello, World!!!");
-		System.out.println("chunkSize = "+ObliviousTree.getChunkSize());
+		System.out.println("chunkSize = "+ObliviousTree.CHUNK_SIZE);
 		System.out.println("PRNG = "+ObliviousTree.PRNG_Info());
+		System.out.println("DIGEST = "+ObliviousTree.Digest_Info());
 		//System.out.println("initPRNG = "+ObliviousTree.initPRNG());
 		System.out.println("mk oblivioustree");
 		ObliviousTree O = new ObliviousTree();
 		System.out.println("PRNG = "+ObliviousTree.PRNG_Info());
+		System.out.println("DIGEST = "+ObliviousTree.Digest_Info());
+
 	} //*/
 
 	/**
@@ -90,17 +93,17 @@ public class ObliviousTree {
 			return "PRNG not initialized!";
 		}
 	}
-	private boolean initDigest(){	
+	private static boolean initDigest(){	
 		if (digest==null){
 			try {
-				digest = MessageDigest.getInstance("SHA1PRNG");
+				digest = MessageDigest.getInstance("SHA-1");
 			} catch (NoSuchAlgorithmException e){
 				return false;
 			}
 		}
 		return true;
 	}
-	public String Digest_Info(){
+	public static String Digest_Info(){
 		if (digest != null){
 			return digest.getAlgorithm()+ " - " + digest.getProvider().toString();
 		} else {
