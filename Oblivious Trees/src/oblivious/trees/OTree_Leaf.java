@@ -1,6 +1,6 @@
 package oblivious.trees;
 
-public class OTree_Leaf {
+public class OTree_Leaf extends OTree_Elem{
 	
 	// Instance Variable
 	byte[] data;
@@ -25,6 +25,18 @@ public class OTree_Leaf {
 			this.data[i] = d[i];
 		}
 	}
+	public boolean setChild(int i, OTree_Elem c){
+		return false;
+	}
+	public boolean addChild(OTree_Elem c){
+		return false;
+	}
+	public boolean removeChild(int i){
+		return false;
+	}
+	protected boolean swapChildren(int i, int j){
+		return false;
+	}
 	public void calcDegree(){
 		return;
 	}
@@ -39,5 +51,11 @@ public class OTree_Leaf {
 	}
 	public int getDegree(){
 		return 1; 
+	}
+	public OTree_Elem getChild(int i){
+		return null;
+	}
+	public OTree_Elem[] getChildren(){
+		return null;
 	}
 }

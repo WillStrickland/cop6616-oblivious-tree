@@ -1,12 +1,15 @@
 package oblivious.trees;
+import java.io.FileInputStream;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Vector;
 
 /**
  *
  * William Strickland and Chris Fontaine
- * COP 6616 
+ * COP 6616 - Multi-core programming
  */
 
 public class ObliviousTree {
@@ -20,8 +23,6 @@ public class ObliviousTree {
 		System.out.println("mk oblivioustree");
 		ObliviousTree O = new ObliviousTree();
 		System.out.println("PRNG = "+ObliviousTree.PRNG_Info());
-		
-		
 	} //*/
 
 	/**
@@ -32,7 +33,8 @@ public class ObliviousTree {
 	
 	/* Class Properties */
 	private static SecureRandom rndSrc;			// Random source for creating obliviousness
-	private final static int CHUNK_SIZE = 100;	// File chunk size
+	private static MessageDigest digest;		// Secure hashing function for leaves
+	public final static int CHUNK_SIZE = 1000;	// File chunk size in bytes
 	
 	/* Instance Properties */
 	private OTree_Node root;	// root node of tree
@@ -40,29 +42,35 @@ public class ObliviousTree {
 
 	
 	public ObliviousTree(){
+		// Initialize crypto stuff
 		initPRNG();
+		this.initDigest();
 		root = new OTree_Node();
 		treeNodes = new Vector<OTree_Elem>();
-		treeNodes.add(root);
+		//treeNodes.add(root);
 	}
 	
-	public ObliviousTree(byte[] file)
+	public ObliviousTree(FileInputStream file)
 	{
+		// Initialize crypto stuff
 		initPRNG();
+		this.initDigest();
 		//1). Instantiate root node
 		root = new OTree_Node();
 		treeNodes = new Vector<OTree_Elem>();
-		treeNodes.add(root);
+		//treeNodes.add(root);
+		
 		//fileChunks = new Vector<OTree_Elem>();
 		
 		//2). Generate leaf nodes from the byte array
+		
 		//3). Create Oblivious Tree
 		//generateLeaves(file);
 		//create();
 	}
 	
-	// Initialize cryptographically secure random source
-	// skip if already initialized, return false if fail
+	// Setup of cryptographic objects
+	// PRNG for randomness and Message Digest for signatures
 	private static boolean initPRNG(){	
 		if (rndSrc==null){
 			try {
@@ -82,8 +90,22 @@ public class ObliviousTree {
 			return "PRNG not initialized!";
 		}
 	}
-	public static int getChunkSize(){
-		return CHUNK_SIZE;
+	private boolean initDigest(){	
+		if (digest==null){
+			try {
+				digest = MessageDigest.getInstance("SHA1PRNG");
+			} catch (NoSuchAlgorithmException e){
+				return false;
+			}
+		}
+		return true;
+	}
+	public String Digest_Info(){
+		if (digest != null){
+			return digest.getAlgorithm()+ " - " + digest.getProvider().toString();
+		} else {
+			return "Digest not initialized!";
+		}
 	}
 	
 	/**
@@ -93,11 +115,10 @@ public class ObliviousTree {
 	 * and, after taking a number between two and three, generate a number of non-leaf, which
 	 * is randomly chosen between 2 and 3.
 	 */
+	
 	/*
 	private void create()
-	{
-		Random rand = new Random();
-		
+	{		
 		int degree = 0;
 		int size = file.length;
 		var treeNode;
@@ -112,16 +133,21 @@ public class ObliviousTree {
 		}
 	} //*/
 	
-	/*
-	private void generateLeaves(byte[] file)
-	{
-		long byteLen = file.length;
-		long bytesRead = 0
-		
-		while(bytesRead < byteLen)
-		{
-			treeNodes.addElement(new OTree_Leaf(copyOfRange(file, bytesRead, bytesRead + 10));
-			bytesRead += 10;
+	//Generate set of leaves with hashes for chunks of file
+	private void generateLeaves(FileInputStream file)
+	{	
+		int this_size;
+		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
+		try {
+			while(true){
+				this_size = file.read(chunk);
+				treeNodes.add(new OTree_Leaf(Arrays.copyOf(chunk,this_size)));
+				if (this_size < ObliviousTree.CHUNK_SIZE){
+					break;
+				}
+			}
+		} catch (Exception e){
+			
 		}
 	} //*/
 	
@@ -138,5 +164,9 @@ public class ObliviousTree {
 		return deletedNode;
 	} //*/
 	
+	// Create Leaf node from raw data
+	public static OTree_Leaf createLeaf(byte[] b){
+		return new OTree_Leaf(b);
+	}
 
 }
