@@ -189,7 +189,7 @@ public class ObliviousTree {
             //If the number of nodes added to the previous level is 1,
             //then that means we've hit the limit and the loop needs
             //to break. That 1 node added will be the root.
-            while(nodesAdded != 1)
+            while(nodesAdded > 1)
             {
                 //Reset the counter which keeps track of how many nodes were
                 //added to the previous level.
