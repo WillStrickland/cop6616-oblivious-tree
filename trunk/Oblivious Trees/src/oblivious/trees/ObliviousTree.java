@@ -139,15 +139,18 @@ public class ObliviousTree {
 		int this_size;
 		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
 		try {
+			// loop until reaches end of file
 			while(true){
 				this_size = file.read(chunk);
-				treeNodes.add(new OTree_Leaf(Arrays.copyOf(chunk,this_size)));
+				treeNodes.add(new OTree_Leaf(ObliviousTree.digest.digest(Arrays.copyOf(chunk,this_size))));
+				// if less than whole chunk, reached end of file
 				if (this_size < ObliviousTree.CHUNK_SIZE){
+					// break out of loop
 					break;
 				}
 			}
 		} catch (Exception e){
-			
+			return;
 		}
 	} //*/
 	
