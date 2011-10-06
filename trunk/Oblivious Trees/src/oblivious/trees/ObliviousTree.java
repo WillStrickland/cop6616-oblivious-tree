@@ -47,29 +47,23 @@ public class ObliviousTree {
 	public ObliviousTree(){
 		// Initialize crypto stuff
 		initPRNG();
-		this.initDigest();
+		initDigest();
 		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
-		//treeNodes.add(root);
 	}
 	
 	public ObliviousTree(FileInputStream file)
 	{
 		// Initialize crypto stuff
 		initPRNG();
-		this.initDigest();
+		initDigest();
 		//1). Instantiate root node
 		root = new OTree_Node();
 		treeNodes = new Vector<OTree_Elem>();
-		//treeNodes.add(root);
-		
-		//fileChunks = new Vector<OTree_Elem>();
-		
 		//2). Generate leaf nodes from the byte array
-		
+		generateLeaves(file);
 		//3). Create Oblivious Tree
-		//generateLeaves(file);
-		//create();
+		generateTree();
+
 	}
 	
 	// Setup of cryptographic objects
@@ -119,23 +113,6 @@ public class ObliviousTree {
 	 * is randomly chosen between 2 and 3.
 	 */
 	
-	/*
-	private void create()
-	{		
-		int degree = 0;
-		int size = file.length;
-		var treeNode;
-		
-		//do until there is only 1 node left
-		nodesOnLevel = treeNodes.size;
-		treeNode = new OTree_Node();
-		for(int list = 0; list < nodesOnLevel)
-		{
-			degree = 2 + rand.nextInt(3);
-			
-		}
-	} //*/
-	
 	//Generate set of leaves with hashes for chunks of file
 	private void generateLeaves(FileInputStream file)
 	{	
@@ -156,108 +133,108 @@ public class ObliviousTree {
 			return;
 		}
 	} //*/
-        
-        private void generateTree()
-        {
-            
-            int randomDegree;
-            //The initial level will be the leaves that were added using the
-            //generateLeaves function
-            int numOfNodesAtLevel = treeNodes.size();
-            //This keeps track of how many nodes we add to a particular level
-            int nodesAdded = 0;
-            //We traverse through the Vector using nodeIndex, which is iterated
-            //whenever we add a child to a parent node.
-            int nodeIndex = 0;
-            //Keeps track of how many children we attach to a node at a higher
-            //level
-            int addCount;
-            //A counter to traverse through a level from left to right.
-            int traversingLevel;
-            OTree_Node treeNode;
-            
-            //Generate the initial uniform random degree
-            if(rndSrc.nextBoolean())
-            {
-                randomDegree = 2;
-            }
-            else
-            {
-                randomDegree = 3;
-            }
-            
-            //If the number of nodes added to the previous level is 1,
-            //then that means we've hit the limit and the loop needs
-            //to break. That 1 node added will be the root.
-            while(nodesAdded != 1)
-            {
-                //Reset the counter which keeps track of how many nodes were
-                //added to the previous level.
-                nodesAdded = 0;
-                
-                //We traverse the previous level by iterating through the nodes 
-                //we added. We increment this by the randomDegree value, which
-                //dictates how many children we attach to a parent.
-                for(traversingLevel = 0; traversingLevel < numOfNodesAtLevel; traversingLevel += randomDegree)
-                {                    
-                    treeNode = new OTree_Node();
-                    
-                    //We take the current number of nodes we traversed through
-                    //and increment it by the randomDegree like in the for loop.
-                    //If this exceeds the number of node at that level, then 
-                    //we set the degree to however many nodes at left. 
-                    //traversingLevel is 0-aligned, so we add 1 to compensate                    
-                    if(((traversingLevel + randomDegree) + 1) > numOfNodesAtLevel)
-                    {
-                        //We take the difference between the excess number of 
-                        //nodes and how many nodes are actually left at that
-                        //level. This becomes the new randomDegree.
-                        randomDegree = ((traversingLevel + randomDegree) + 1) - numOfNodesAtLevel;
-                    }
-                    
-                    //We set the number of nodes we will be attaching to a 
-                    //parent by the degree.
-                    addCount = randomDegree;
-                    
-                    while(addCount > 0)
-                    {
-                        //Using the nodeIndex to grab the next node and set its
-                        //parent to the current node. We then add those nodes
-                        //to the children of the current node.
-                        treeNodes.get(nodeIndex).setParent(treeNode);
-                        treeNode.addChild(treeNodes.get(nodeIndex));
-                        
-                        //Iterate nodeIndex for every node we 'eat'
-                        nodeIndex++;                 
-                        addCount--;
-                    }
-                    
-                    //Add the new node to the Vector
-                    treeNodes.add(treeNode);
-                    //Keep track of each node we add this way
-                    nodesAdded++;
-                    
-                    //Generate the next randomDegree
-                    if(rndSrc.nextBoolean())
-                    {
-                        randomDegree = 2;
-                    }
-                    else
-                    {
-                        randomDegree = 3;
-                    }
-                    
-                }
-                
-                //The number of of nodes at the level we just created to the 
-                //number of nodes we added to the Vector
-                numOfNodesAtLevel = nodesAdded;
-            }
-            
-            //Set the root after the loop breaks to finish off
-            //the tree.            
-            root = (OTree_Node)treeNodes.get(nodeIndex);            
-        }
+	
+	private void generateTree()
+	{
+		
+		int randomDegree;
+		//The initial level will be the leaves that were added using the
+		//generateLeaves function
+		int numOfNodesAtLevel = treeNodes.size();
+		//This keeps track of how many nodes we add to a particular level
+		int nodesAdded = 0;
+		//We traverse through the Vector using nodeIndex, which is iterated
+		//whenever we add a child to a parent node.
+		int nodeIndex = 0;
+		//Keeps track of how many children we attach to a node at a higher
+		//level
+		int addCount;
+		//A counter to traverse through a level from left to right.
+		int traversingLevel;
+		OTree_Node treeNode;
+		
+		//Generate the initial uniform random degree
+		if(rndSrc.nextBoolean())
+		{
+			randomDegree = 2;
+		}
+		else
+		{
+			randomDegree = 3;
+		}
+		
+		//If the number of nodes added to the previous level is 1,
+		//then that means we've hit the limit and the loop needs
+		//to break. That 1 node added will be the root.
+		while(nodesAdded != 1)
+		{
+			//Reset the counter which keeps track of how many nodes were
+			//added to the previous level.
+			nodesAdded = 0;
+			
+			//We traverse the previous level by iterating through the nodes 
+			//we added. We increment this by the randomDegree value, which
+			//dictates how many children we attach to a parent.
+			for(traversingLevel = 0; traversingLevel < numOfNodesAtLevel; traversingLevel += randomDegree)
+			{
+				treeNode = new OTree_Node();
+				
+				//We take the current number of nodes we traversed through
+				//and increment it by the randomDegree like in the for loop.
+				//If this exceeds the number of node at that level, then 
+				//we set the degree to however many nodes at left. 
+				//traversingLevel is 0-aligned, so we add 1 to compensate			
+				if(((traversingLevel + randomDegree) + 1) > numOfNodesAtLevel)
+				{
+					//We take the difference between the excess number of 
+					//nodes and how many nodes are actually left at that
+					//level. This becomes the new randomDegree.
+					randomDegree = ((traversingLevel + randomDegree) + 1) - numOfNodesAtLevel;
+				}
+				
+				//We set the number of nodes we will be attaching to a 
+				//parent by the degree.
+				addCount = randomDegree;
+				
+				while(addCount > 0)
+				{
+					//Using the nodeIndex to grab the next node and set its
+					//parent to the current node. We then add those nodes
+					//to the children of the current node.
+					treeNodes.get(nodeIndex).setParent(treeNode);
+					treeNode.addChild(treeNodes.get(nodeIndex));
+					
+					//Iterate nodeIndex for every node we 'eat'
+					nodeIndex++;		 
+					addCount--;
+				}
+				
+				//Add the new node to the Vector
+				treeNodes.add(treeNode);
+				//Keep track of each node we add this way
+				nodesAdded++;
+				
+				//Generate the next randomDegree
+				if(rndSrc.nextBoolean())
+				{
+					randomDegree = 2;
+				}
+				else
+				{
+					randomDegree = 3;
+				}
+				
+			}
+			
+			//The number of of nodes at the level we just created to the 
+			//number of nodes we added to the Vector
+			numOfNodesAtLevel = nodesAdded;
+		}
+		
+		//Set the root after the loop breaks to finish off
+		//the tree.		
+		root = (OTree_Node)treeNodes.get(nodeIndex);		
+	}
 	
 	/*
 	public void add(OTree_Leaf newLeaf)
@@ -271,10 +248,5 @@ public class ObliviousTree {
 		
 		return deletedNode;
 	} //*/
-	
-	// Create Leaf node from raw data
-	public static OTree_Leaf createLeaf(byte[] b){
-		return new OTree_Leaf(b);
-	}
 
 }
