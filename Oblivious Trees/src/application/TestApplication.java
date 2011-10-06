@@ -2,6 +2,8 @@ package application;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 import oblivious.trees.ObliviousTree;
@@ -16,16 +18,24 @@ public class TestApplication {
 		// open file based on user input
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+			System.out.print("Enter file name: ");
 			filename = reader.readLine();
 			System.out.println("Opening "+filename);
-			file = new FileInputStream(filename); 
-		} catch (Exception e){
+			file = new FileInputStream(filename);
+			
+			
+			//ObliviousTree OT = new ObliviousTree(file);
+			
+			
+			System.out.println("Closing file");
+			file.close();
+		} catch (FileNotFoundException e){
 			System.out.println("could not open file - "+filename);
-			return;
+		} catch (IOException e){
+			System.out.println("General IO Error - "+filename);
+		} catch (Exception e){
+			System.out.println("Unknown Error");
 		}
-		
-		//ObliviousTree OT = new ObliviousTree(file);
-
 	}
 
 }
