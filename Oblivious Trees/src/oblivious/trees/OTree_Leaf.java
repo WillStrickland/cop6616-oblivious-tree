@@ -37,7 +37,7 @@ public class OTree_Leaf extends OTree_Elem{
 	protected boolean swapChildren(int i, int j){
 		return false;
 	}
-	public void calcDegree(){
+	public void calcLeafCnt(){
 		return;
 	}
 	
@@ -50,6 +50,9 @@ public class OTree_Leaf extends OTree_Elem{
 		return tmp;
 	}
 	public int getDegree(){
+		return 0; 
+	}
+	public int getLeafCnt(){
 		return 1; 
 	}
 	public OTree_Elem getChild(int i){
