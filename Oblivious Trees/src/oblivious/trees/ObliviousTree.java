@@ -235,12 +235,24 @@ public class ObliviousTree {
 		//the tree.		
 		root = (OTree_Node)treeNodes.get(nodeIndex);		
 	}
+        /*
+         * Fetches the ith leaf of the tree
+         */
+        public Vector<OTree_Elem> getLeaf(int i)
+        {
+            OTree_Leaf leaf;
+            
+            
+            
+            return leaf;
+        }
 	
 	/*
 	public void add(OTree_Leaf newLeaf)
 	{
-	} //*/
-	
+            
+	}
+	*/
 	/*
 	public OTree_Leaf delete()
 	{
