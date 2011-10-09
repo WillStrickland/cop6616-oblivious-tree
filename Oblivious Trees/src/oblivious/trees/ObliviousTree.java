@@ -135,8 +135,7 @@ public class ObliviousTree {
 	} //*/
 	
 	private void generateTree()
-	{
-		
+	{		
 		int randomDegree;
 		//The initial level will be the leaves that were added using the
 		//generateLeaves function
@@ -235,30 +234,78 @@ public class ObliviousTree {
 		//the tree.		
 		root = (OTree_Node)treeNodes.get(nodeIndex);		
 	}
+       
         /*
-         * Fetches the ith leaf of the tree
+         * @param byte[] value
+         * @param int i
+         * In order to insert a new node, you must provide data (in the form of
+         * a byte array) and a position. You want to insert the value into 
+         * position i.
+         * @return void
          */
-        public Vector<OTree_Elem> getLeaf(int i)
-        {
-            OTree_Leaf leaf;
-            
-            
-            
-            return leaf;
-        }
-	
-	/*
-	public void add(OTree_Leaf newLeaf)
+        public void insert(byte[] value, int i)
 	{
-            
+            /*
+             * Create a new leaf node based on the new data
+             */
+            int w, randomDegree;
+            int maxLeaves = treeNodes.size();
+            OTree_Node tempNode;
+            OTree_Leaf newLeaf = new OTree_Leaf(value);
+            /*
+             * Fetch the current ith (zero-aligned) leaf node
+             */
+            OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
+            /*
+             * Get the parent of the current ith node
+             */
+            OTree_Node parent = (OTree_Node)iThLeaf.getParent();
+          
+            /*
+             * Insert the new ith node into the ith (zero-aligned) position
+             */
+            treeNodes.add((i-1), newLeaf);
+            /*
+             * Now we work from left to right, starting from the parent of i. We 
+             * know when we have reached the root because the parent of the root 
+             * is always null.             
+             */
+            while(parent.getParent() != null)
+            {
+                w = 1;
+                tempNode = parent;                
+                randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                
+                /*
+                 * if(parent.getNextSibling() == null)
+                 *  go to parent and give it a new child. Take the next w 
+                 *  children of the current node and the new child/sibling their
+                 *  parent.
+                 * else     
+                 */
+                parent = (OTree_Node)parent.getParent();
+            }                                                
 	}
-	*/
-	/*
+        	/*
 	public OTree_Leaf delete()
 	{
 		OTree_Leaf = deletedNode;
 		
 		return deletedNode;
 	} //*/
+        
+        /*
+         * Fetches the ith leaf of the tree
+         */
+        private OTree_Leaf getLeaf(int i)
+        {
+            OTree_Leaf leaf;
+            
+            leaf = (OTree_Leaf)treeNodes.get((i - 1));
+            
+            return leaf;
+        }
+        
+
 
 }
