@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Vector;
+import java.lang.Math;
 
 /**
  *
@@ -251,6 +252,7 @@ public class ObliviousTree {
             int w, randomDegree;
             int maxLeaves = treeNodes.size();
             OTree_Node tempNode;
+            OTree_Node sibling;
             OTree_Leaf newLeaf = new OTree_Leaf(value);
             /*
              * Fetch the current ith (zero-aligned) leaf node
@@ -270,17 +272,20 @@ public class ObliviousTree {
              * know when we have reached the root because the parent of the root 
              * is always null.             
              */
+            
+            w = 1; 
+            
             while(parent.getParent() != null)
             {
-                w = 1;
                 tempNode = parent;                
                 randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
-                
-                /*
-                 * if(parent.getNextSibling() == null)
+                /*                
+                 * if(parent.getNextSibling() != null)
+                 *  sibling = parent.getNextSibling();
                  *  go to parent and give it a new child. Take the next w 
                  *  children of the current node and the new child/sibling their
                  *  parent.
+                 *  w = max(0, sibling.getDegree() + w - randomDegree); 
                  * else     
                  */
                 parent = (OTree_Node)parent.getParent();
