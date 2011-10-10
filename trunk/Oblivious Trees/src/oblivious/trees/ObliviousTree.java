@@ -5,11 +5,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Vector;
-import java.lang.Math;
 
 /**
  *
- * William Strickland and Chris Fontaine
+ * @author William Strickland and Chris Fontaine
  * COP 6616 - Multi-core programming
  */
 
@@ -67,8 +66,10 @@ public class ObliviousTree {
 
 	}
 	
-	// Setup of cryptographic objects
-	// PRNG for randomness and Message Digest for signatures
+	// Setup of cryptographic objects - PRNG for randomness and Message Digest for signatures
+	/** Initialize psuedorandom number generator for class if not already initialized.
+	 *  @return true if successful, else false
+	 */
 	private static boolean initPRNG(){	
 		if (rndSrc==null){
 			try {
@@ -81,6 +82,9 @@ public class ObliviousTree {
 		}
 		return true;
 	}
+	/** get information about psuedorandom number generator used.
+	 *  @return String describing psuedorandom number generator algorithm
+	 */
 	public static String PRNG_Info(){
 		if (rndSrc != null){
 			return rndSrc.getAlgorithm()+ " - " + rndSrc.getProvider().toString();
@@ -88,6 +92,9 @@ public class ObliviousTree {
 			return "PRNG not initialized!";
 		}
 	}
+	/** Initialize message digest for class if not already initialized.
+	 *  @return true if successful, else false
+	 */
 	private static boolean initDigest(){	
 		if (digest==null){
 			try {
@@ -98,6 +105,9 @@ public class ObliviousTree {
 		}
 		return true;
 	}
+	/** get information about message digest used.
+	 *  @return String describing message digest algorithm
+	 */
 	public static String Digest_Info(){
 		if (digest != null){
 			return digest.getAlgorithm()+ " - " + digest.getProvider().toString();
@@ -106,19 +116,16 @@ public class ObliviousTree {
 		}
 	}
 	
-	/**
-	 * @param byte[] file
-	 * @return void
-	 * Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
-	 * and, after taking a number between two and three, generate a number of non-leaf, which
-	 * is randomly chosen between 2 and 3.
+	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
+	 *  and, after taking a number between two and three, generate a number of non-leaf, which
+	 *  @param byte[] file
+	 *  @return void
 	 */
-	
-	//Generate set of leaves with hashes for chunks of file
-	private void generateLeaves(FileInputStream file)
+	private synchronized void generateLeaves(FileInputStream file)
 	{	
 		int this_size;
 		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
+		treeNodes.clear();
 		try {
 			// loop until reaches end of file
 			while(true){
@@ -134,8 +141,10 @@ public class ObliviousTree {
 			return;
 		}
 	} //*/
-	
-	private void generateTree()
+	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
+	 *  and, after taking a number between two and three, generate a number of non-leaf, which
+	 */
+	private synchronized void generateTree()
 	{		
 		int randomDegree;
 		//The initial level will be the leaves that were added using the
@@ -232,85 +241,83 @@ public class ObliviousTree {
 		}
 		
 		//Set the root after the loop breaks to finish off
-		//the tree.		
-		root = (OTree_Node)treeNodes.get(nodeIndex);		
+		//the tree.
+		root = (OTree_Node)treeNodes.get(nodeIndex);
 	}
-       
-        /*
-         * @param byte[] value
-         * @param int i
-         * In order to insert a new node, you must provide data (in the form of
-         * a byte array) and a position. You want to insert the value into 
-         * position i.
-         * @return void
-         */
-        public void insert(byte[] value, int i)
+	
+	/** In order to insert a new node, you must provide data (in the form of
+	 *  a byte array) and a position. You want to insert the value into 
+	 *  position i.
+	 *  @param value value to be inserted
+	 *  @param i index of chunk/leaf to insert into
+	 *  @return void
+	 */
+	public synchronized void insert(byte[] value, int i)
 	{
-            /*
-             * Create a new leaf node based on the new data
-             */
-            int w, randomDegree;
-            int maxLeaves = treeNodes.size();
-            OTree_Node tempNode;
-            OTree_Node sibling;
-            OTree_Leaf newLeaf = new OTree_Leaf(value);
-            /*
-             * Fetch the current ith (zero-aligned) leaf node
-             */
-            OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
-            /*
-             * Get the parent of the current ith node
-             */
-            OTree_Node parent = (OTree_Node)iThLeaf.getParent();
-          
-            /*
-             * Insert the new ith node into the ith (zero-aligned) position
-             */
-            treeNodes.add((i-1), newLeaf);
-            /*
-             * Now we work from left to right, starting from the parent of i. We 
-             * know when we have reached the root because the parent of the root 
-             * is always null.             
-             */
-            
-            w = 1; 
-            
-            while(parent.getParent() != null)
-            {
-                tempNode = parent;                
-                randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
-                /*                
-                 * if(parent.getNextSibling() != null)
-                 *  sibling = parent.getNextSibling();
-                 *  go to parent and give it a new child. Take the next w 
-                 *  children of the current node and the new child/sibling their
-                 *  parent.
-                 *  w = max(0, sibling.getDegree() + w - randomDegree); 
-                 * else     
-                 */
-                parent = (OTree_Node)parent.getParent();
-            }                                                
-	}
-        	/*
-	public OTree_Leaf delete()
-	{
-		OTree_Leaf = deletedNode;
+		/*
+		 * Create a new leaf node based on the new data
+		 */
+		int w, randomDegree;
+		int maxLeaves = treeNodes.size();
+		OTree_Node tempNode;
+		OTree_Node sibling;
+		OTree_Leaf newLeaf = new OTree_Leaf(value);
+		/*
+		 * Fetch the current ith (zero-aligned) leaf node
+		 */
+		OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
+		/*
+		 * Get the parent of the current ith node
+		 */
+		OTree_Node parent = (OTree_Node)iThLeaf.getParent();
+		/*
+		 * Insert the new ith node into the ith (zero-aligned) position
+		 */
+		treeNodes.add((i-1), newLeaf);
+		/*
+		 * Now we work from left to right, starting from the parent of i. We 
+		 * know when we have reached the root because the parent of the root 
+		 * is always null.
+		 */
 		
-		return deletedNode;
+		w = 1; 
+		
+		while(parent.getParent() != null)
+		{
+		tempNode = parent;		  
+		randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+		/*
+		 * if(parent.getNextSibling() != null)
+		 *  sibling = parent.getNextSibling();
+		 *  go to parent and give it a new child. Take the next w 
+		 *  children of the current node and the new child/sibling their
+		 *  parent.
+		 *  w = max(0, sibling.getDegree() + w - randomDegree);
+		 * else	
+		 */
+		parent = (OTree_Node)parent.getParent();
+		}
+	}
+	//
+	public synchronized boolean delete()
+	{
+		//OTree_Leaf = deletedNode;
+		
+		return false;
 	} //*/
-        
-        /*
-         * Fetches the ith leaf of the tree
-         */
-        private OTree_Leaf getLeaf(int i)
-        {
-            OTree_Leaf leaf;
-            
-            leaf = (OTree_Leaf)treeNodes.get((i - 1));
-            
-            return leaf;
-        }
-        
+
+	/**
+	 *  Fetches the ith leaf of the tree
+	 *  @param i index of leaf to return (indices start at 1)
+	 */
+	private synchronized OTree_Leaf getLeaf(int i)
+	{
+		OTree_Leaf leaf;
+		
+		leaf = (OTree_Leaf)treeNodes.get((i - 1));
+		return leaf;
+	}
+
 
 
 }
