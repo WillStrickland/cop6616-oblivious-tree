@@ -6,12 +6,10 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Vector;
 
-/**
- *
+/** Oblivious Tree - COP 6616
  * @author William Strickland and Chris Fontaine
- * COP 6616 - Multi-core programming
+ * @version Sequential Implementation
  */
-
 public class ObliviousTree {
 
 	/*
