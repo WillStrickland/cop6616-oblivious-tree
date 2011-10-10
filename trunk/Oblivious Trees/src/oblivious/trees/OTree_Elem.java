@@ -23,10 +23,13 @@ public abstract class OTree_Elem {
 	 *  @return true if successful, false if failure
 	 */
 	public boolean setParent(OTree_Elem p){
+		// check if parent value
 		if (p != null){
+			// set parent and return true
 			this.parent = p;
 			return true;
 		} else {
+			// else return false
 			return false;
 		}
 	}
@@ -52,15 +55,23 @@ public abstract class OTree_Elem {
 	 *  @return true if successful, false if failure
 	 */
 	protected abstract boolean swapChildren(int i, int j);
-	/** calculate the number of leaves below (or at) this node of the tree.
+	/** calculate the number of leaves below (or at) this node of the tree. Does not calculate re-calculate child subtrees.
 	 */
 	abstract void calcLeafCnt();
+	/** calculate the number of leaves below (or at) this node of the tree.
+	 * @param forceCalc if true re-calculates whole subtree. if false behaves like calcLeafCnt().
+	 */
+	abstract void calcLeafCnt(boolean forceCalc);
 	/** trickle updates in leaf count to top of tree. 
 	 */
 	protected void trickleLeafCnt(){
+		// starting at the parent of this node
 		OTree_Elem tmp = this.parent;
+		// iterate to root
 		while (tmp != null){
+			// calculate the leaf count for this node
 			tmp.calcLeafCnt();
+			// repeat with next parent
 			tmp = tmp.parent;
 		}
 	}
@@ -79,43 +90,54 @@ public abstract class OTree_Elem {
 	}
 	/** return the child at given position of child set.
 	 *  @param i position of child
+	 *  @return child OTree_Elem if child exists else null
 	 */
 	public abstract OTree_Elem getChild(int i);
 	/** @return copy of child tree 
 	 */
 	public abstract OTree_Elem[] getChildren();
-	/** 
+	/** @return the previous child on in parent child set, null if no parent or no previous sibling
 	 */
 	public OTree_Elem getPrevSibling(){
-		OTree_Elem rtn = null;
-		if (this.parent != null){	
+		OTree_Elem rtn = null;	// return value
+		if (this.parent != null){
 			OTree_Elem[] tmp = this.parent.getChildren();
 			if(tmp!=null){
+				// if has parent and parent has children
+				// starting at end and search backwards till second element
 				for (int i=tmp.length-1; i>0; i--){
+					// if match this element and set element 
 					if (tmp[i]==this){
+						// set return and break
 						rtn = tmp[i-1];
 						break;
 					}
 				}
 			}
 		}
+		// previous element if found or return null
 		return rtn;
 	}
-	/** 
+	/** @return the next child on in parent child set, null if no parent or no next sibling
 	 */
 	public OTree_Elem getNextSibling(){
-		OTree_Elem rtn = null;
-		if (this.parent != null){	
+		OTree_Elem rtn = null;	// return value
+		if (this.parent != null){
 			OTree_Elem[] tmp = this.parent.getChildren();
 			if(tmp!=null){
+				// if has parent and parent has children
+				// starting at beginning and search till second to last element
 				for (int i=0; i<tmp.length-1; i++){
+					// if match this element and set element 
 					if (tmp[i]==this){
+						// set return and break
 						rtn = tmp[i+1];
 						break;
 					}
 				}
 			}
 		}
+		// next element if found or return null
 		return rtn;
 	}
 }
