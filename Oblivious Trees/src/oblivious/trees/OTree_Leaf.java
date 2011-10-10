@@ -6,12 +6,46 @@ public class OTree_Leaf extends OTree_Elem{
 	byte[] data;
 	
 	// Constructors
+	/**
+	 * construct OTree_Leaf with no data or parent.
+	 */
 	public OTree_Leaf(){
+		// no parent no data
 		super();
+		// set data to null
 		data = null;
 	}
+	/**
+	 * construct OTree_Leaf with parent.
+	 * @param p parent OTree_Elem
+	 */
+	public OTree_Leaf(OTree_Elem p){
+		// call super to set parent
+		super(p);
+		//set data to null
+		data = null;
+	}
+	/**
+	 * construct OTree_Leaf with initial data but no parent.
+	 * @param d data to be stored by OTree_Leaf
+	 */
 	public OTree_Leaf(byte[] d){
 		super();
+		// copy data from given byte array
+		data = new byte[d.length];
+		for (int i=0; i<d.length; i++){
+			data[i] = d[i];
+		}
+	}
+	/**
+	 * construct OTree_Leaf with initial data.
+	 * @param p parent OTree_Elem
+	 * @param d data to be stored by OTree_Leaf
+	 */
+	public OTree_Leaf(OTree_Elem p, byte[] d){
+		// call super to set parent
+		super(p);
+		// copy data from given byte array
 		data = new byte[d.length];
 		for (int i=0; i<d.length; i++){
 			data[i] = d[i];
@@ -19,6 +53,10 @@ public class OTree_Leaf extends OTree_Elem{
 	}
 	
 	// Mutators
+	/**
+	 * set the data stored by OTree_Leaf
+	 * @param d
+	 */
 	public void setData(byte[] d){
 		this.data = new byte[d.length];
 		for (int i=0; i<this.data.length; i++){
@@ -40,8 +78,15 @@ public class OTree_Leaf extends OTree_Elem{
 	public void calcLeafCnt(){
 		return;
 	}
+	public void calcLeafCnt(boolean forceCalc){
+		return;
+	}
 	
 	// Inspectors
+	/**
+	 * 
+	 * @return data stored by OTree_Leaf
+	 */
 	public byte[] getData(){
 		byte[] tmp = new byte[this.data.length];
 		for (int i=0; i<this.data.length; i++){
