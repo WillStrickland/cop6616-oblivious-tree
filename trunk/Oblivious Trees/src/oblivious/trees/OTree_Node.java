@@ -8,8 +8,7 @@ public class OTree_Node extends OTree_Elem {
 	private int leafCnt;
 	
 	// Constructors
-	/**
-	 * Construct OTree_Node with no parent and no children.
+	/** Construct OTree_Node with no parent and no children.
 	 */
 	public OTree_Node(){
 		super();
@@ -23,9 +22,8 @@ public class OTree_Node extends OTree_Elem {
 		degree = 0;
 		leafCnt = 0;
 	}
-	/**
-	 * Construct OTree_Node with with parent but no children.
-	 * @param p parent OTree_Elem
+	/** Construct OTree_Node with with parent but no children.
+	 *  @param p parent OTree_Elem
 	 */
 	public OTree_Node(OTree_Elem p){
 		// call super to set parent
@@ -42,7 +40,7 @@ public class OTree_Node extends OTree_Elem {
 	}
 	
 	// Mutators
-	protected void calcLeafCnt(){
+	public void calcLeafCnt(){
 		// reset leaf count
 		this.leafCnt = 0;
 		// for each child
@@ -51,7 +49,7 @@ public class OTree_Node extends OTree_Elem {
 			leafCnt += children[i].getLeafCnt();
 		}
 	}
-	protected void calcLeafCnt(boolean forceCalc){
+	public void calcLeafCnt(boolean forceCalc){
 		// reset leaf count
 		this.leafCnt = 0;
 		// for each child

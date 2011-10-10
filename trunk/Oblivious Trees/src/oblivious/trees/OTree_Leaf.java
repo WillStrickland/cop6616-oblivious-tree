@@ -3,11 +3,10 @@ package oblivious.trees;
 public class OTree_Leaf extends OTree_Elem{
 	
 	// Instance Variable
-	byte[] data;
+	private byte[] data;
 	
 	// Constructors
-	/**
-	 * construct OTree_Leaf with no data or parent.
+	/** construct OTree_Leaf with no data or parent.
 	 */
 	public OTree_Leaf(){
 		// no parent no data
@@ -15,9 +14,8 @@ public class OTree_Leaf extends OTree_Elem{
 		// set data to null
 		data = null;
 	}
-	/**
-	 * construct OTree_Leaf with parent.
-	 * @param p parent OTree_Elem
+	/** construct OTree_Leaf with parent.
+	 *  @param p parent OTree_Elem
 	 */
 	public OTree_Leaf(OTree_Elem p){
 		// call super to set parent
@@ -25,9 +23,8 @@ public class OTree_Leaf extends OTree_Elem{
 		//set data to null
 		data = null;
 	}
-	/**
-	 * construct OTree_Leaf with initial data but no parent.
-	 * @param d data to be stored by OTree_Leaf
+	/** construct OTree_Leaf with initial data but no parent.
+	 *  @param d data to be stored by OTree_Leaf
 	 */
 	public OTree_Leaf(byte[] d){
 		super();
@@ -37,10 +34,9 @@ public class OTree_Leaf extends OTree_Elem{
 			data[i] = d[i];
 		}
 	}
-	/**
-	 * construct OTree_Leaf with initial data.
-	 * @param p parent OTree_Elem
-	 * @param d data to be stored by OTree_Leaf
+	/** construct OTree_Leaf with initial data.
+	 *  @param p parent OTree_Elem
+	 *  @param d data to be stored by OTree_Leaf
 	 */
 	public OTree_Leaf(OTree_Elem p, byte[] d){
 		// call super to set parent
@@ -53,14 +49,19 @@ public class OTree_Leaf extends OTree_Elem{
 	}
 	
 	// Mutators
-	/**
-	 * set the data stored by OTree_Leaf
-	 * @param d
+	/** set the data stored by OTree_Leaf
+	 *  @param d data to be copied into OTree_Leaf
+	 *  @return true if successful, false if failure
 	 */
-	public void setData(byte[] d){
-		this.data = new byte[d.length];
-		for (int i=0; i<this.data.length; i++){
-			this.data[i] = d[i];
+	public boolean setData(byte[] d){
+		if (d!=null && d.length>0){
+			this.data = new byte[d.length];
+			for (int i=0; i<this.data.length; i++){
+				this.data[i] = d[i];
+			}
+			return true;
+		} else {
+			return false;
 		}
 	}
 	public boolean setChild(int i, OTree_Elem c){
@@ -83,9 +84,7 @@ public class OTree_Leaf extends OTree_Elem{
 	}
 	
 	// Inspectors
-	/**
-	 * 
-	 * @return data stored by OTree_Leaf
+	/** @return data stored by OTree_Leaf
 	 */
 	public byte[] getData(){
 		byte[] tmp = new byte[this.data.length];

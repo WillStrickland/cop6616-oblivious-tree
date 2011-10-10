@@ -3,21 +3,39 @@ package oblivious.trees;
 public abstract class OTree_Elem {
 	final static int MAX_CHILDREN = 3;
 	// Instance properties
-	protected OTree_Elem parent;
+	private OTree_Elem parent;	// parent node in tree
+	private byte[] sig;			// signature of this node
 	
 	// Constructors
 	/** OTree_Elem with without parent (root) */
 	public OTree_Elem(){
 		parent = null;
+		sig = null;
 	}
 	/** OTree_Elem as the child of given node.
-	 *  @param p parent OTree_Elem 
+	 *  @param p parent OTree_Elem
 	 */
 	public OTree_Elem(OTree_Elem p){
 		parent = p;
+		sig = null;
 	}
 	
 	// Mutators
+	/** set the the signature for this OTree_Elem
+	 *  @param s signature to be set
+	 *  @return true if successful, false if failure
+	 */
+	public boolean setSig(byte[] s){
+		if (s!=null && s.length>0){
+			this.sig = new byte[s.length];
+			for (int i=0; i<this.sig.length; i++){
+				this.sig[i] = s[i];
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 	/** Changes the parent node of this node such that it is a child of the given node.
 	 *  @param p new parent OTree_Elem
 	 *  @return true if successful, false if failure
@@ -57,11 +75,11 @@ public abstract class OTree_Elem {
 	protected abstract boolean swapChildren(int i, int j);
 	/** calculate the number of leaves below (or at) this node of the tree. Does not calculate re-calculate child subtrees.
 	 */
-	abstract void calcLeafCnt();
+	public abstract void calcLeafCnt();
 	/** calculate the number of leaves below (or at) this node of the tree.
-	 * @param forceCalc if true re-calculates whole subtree. if false behaves like calcLeafCnt().
+	 *  @param forceCalc if true re-calculates whole subtree. if false behaves like calcLeafCnt().
 	 */
-	abstract void calcLeafCnt(boolean forceCalc);
+	public abstract void calcLeafCnt(boolean forceCalc);
 	/** trickle updates in leaf count to top of tree. 
 	 */
 	protected void trickleLeafCnt(){
@@ -77,12 +95,21 @@ public abstract class OTree_Elem {
 	}
 	
 	// Inspectors
+	/** @return signature of this OTree_Elem
+	 */
+	public byte[] getSig(){
+		byte[] tmp = new byte[this.sig.length];
+		for (int i=0; i<this.sig.length; i++){
+			tmp[i] = this.sig[i];
+		}
+		return tmp;
+	}
 	/** @return degree of this node of tree
 	 */
-	abstract int getDegree();
+	public abstract int getDegree();
 	/** @return count of leaf nodes below (or at) this node of the tree
 	 */
-	abstract int getLeafCnt();
+	public abstract int getLeafCnt();
 	/** @return parent node of this node, null if has no parent
 	 */
 	public OTree_Elem getParent(){
