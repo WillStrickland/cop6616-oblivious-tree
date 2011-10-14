@@ -1,9 +1,11 @@
 package oblivious.trees;
 import java.io.FileInputStream;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Vector;
 
 /** Oblivious Tree - COP 6616
@@ -128,7 +130,10 @@ public class ObliviousTree {
 			// loop until reaches end of file
 			while(true){
 				this_size = file.read(chunk);
-				treeNodes.add(new OTree_Leaf(ObliviousTree.digest.digest(Arrays.copyOf(chunk,this_size))));
+				OTree_Leaf newLeaf = new OTree_Leaf();
+				newLeaf.setSig(ObliviousTree.digest.digest(Arrays.copyOf(chunk,this_size)));
+				treeNodes.add(newLeaf);
+				
 				// if less than whole chunk, reached end of file
 				if (this_size < ObliviousTree.CHUNK_SIZE){
 					// break out of loop
@@ -258,7 +263,8 @@ public class ObliviousTree {
 		int w, randomDegree, level = 0;
 		int maxLeaves = treeNodes.size();
 		OTree_Node tempNode, sibling, ithParent, parent;
-		OTree_Leaf newLeaf = new OTree_Leaf(value);
+		OTree_Leaf newLeaf = new OTree_Leaf();
+		newLeaf.setSig(value);
 		/*
 		 * Fetch the current ith (zero-aligned) leaf node
 		 */
@@ -441,7 +447,63 @@ public class ObliviousTree {
 		leaf = (OTree_Leaf)treeNodes.get((i - 1));
 		return leaf;
 	}
-
-
-
+	
+	/** generate the signature output of algorithm
+	 * outputs each node in signature as {sig_size}{sig}{degree} in breadth-first order
+	 *  @return byte[] of current complete signature, null if failure
+	 */
+	public byte[] generateSig(){
+		byte[] rtn = new byte[128];	// signature output byte array
+		int i=0;	// index into output array
+		LinkedList<OTree_Elem> nodeQueue = new LinkedList<OTree_Elem>();	// list of unprocessed nodes
+		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
+		byte[] tmp;	// temporary array for holding byte rep of each node
+		
+		// add root to queue to begin
+		nodeQueue.add(this.root);
+		// output tree with breadth-first traversal
+		while(!nodeQueue.isEmpty()){
+			// get next node
+			OTree_Elem thisNode = nodeQueue.remove();
+			// add children of this node to queue
+			nodeQueue.addAll(Arrays.asList(thisNode.getChildren()));
+			// get byte signature of current node
+			tmp = thisNode.getSig();
+			// while rtn not big enough
+			while((rtn.length-i)<(tmp.length+8)){
+				// resize rtn to double
+				rtn = Arrays.copyOf(rtn, rtn.length*2);
+			}
+			// write node into rtn 
+			// prepend with signature size
+			buf.putInt(0, tmp.length);
+			// copy signature into rtn
+			System.arraycopy(buf.getInt(0), 0, rtn, i, 4);
+			i+=4;
+			// copy signature into rtn
+			System.arraycopy(tmp, 0, rtn, i, tmp.length);
+			i += tmp.length;
+			// append with degree
+			buf.putInt(0, thisNode.getDegree());
+			System.arraycopy(buf.getInt(0), 0, rtn, i, 4);
+			i+=4;
+		}
+		// return truncated array of just signatures
+		return Arrays.copyOf(rtn, i);
+	}
+	/** verify if a signature is correct given the file and public key
+	 * accepts signatures in the format produced by generateSig()
+	 * verifies each node of tree against children until reaches leaves
+	 * for each leaf verifies against matching chunk of file 
+	 * @param file
+	 * @param sig
+	 * @return true if valid, false if invalid
+	 */
+	public static boolean verifySig(byte[] file, byte[] sig){
+		
+		
+		return false;
+	}
+	
+	
 }
