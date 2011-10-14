@@ -255,10 +255,9 @@ public class ObliviousTree {
 		/*
 		 * Create a new leaf node based on the new data
 		 */
-		int w, randomDegree;
+		int w, randomDegree, level = 0;
 		int maxLeaves = treeNodes.size();
-		OTree_Node tempNode;
-		OTree_Node sibling;
+		OTree_Node tempNode, sibling, ithParent, parent;
 		OTree_Leaf newLeaf = new OTree_Leaf(value);
 		/*
 		 * Fetch the current ith (zero-aligned) leaf node
@@ -267,34 +266,62 @@ public class ObliviousTree {
 		/*
 		 * Get the parent of the current ith node
 		 */
-		OTree_Node parent = (OTree_Node)iThLeaf.getParent();
+		parent = ithParent = (OTree_Node)iThLeaf.getParent();
 		/*
 		 * Insert the new ith node into the ith (zero-aligned) position
 		 */
 		treeNodes.add((i-1), newLeaf);
-		/*
-		 * Now we work from left to right, starting from the parent of i. We 
-		 * know when we have reached the root because the parent of the root 
-		 * is always null.
-		 */
-		
-		w = 1; 
-		
-		while(parent.getParent() != null)
-		{
-		tempNode = parent;		  
-		randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
-		/*
-		 * if(parent.getNextSibling() != null)
-		 *  sibling = parent.getNextSibling();
-		 *  go to parent and give it a new child. Take the next w 
-		 *  children of the current node and the new child/sibling their
-		 *  parent.
-		 *  w = max(0, sibling.getDegree() + w - randomDegree);
-		 * else	
-		 */
-		parent = (OTree_Node)parent.getParent();
-		}
+
+                /*
+                 * Figure out what our level is by traversing the tree up to the
+                 * root. We need to know the level so we can fetch the level
+                 * neighbor. Ugh, this is so inefficient.
+                 */
+                while(parent != null)
+                {
+                    parent = (OTree_Node)parent.getParent();
+                    level++;
+                }
+                
+                if(rndSrc.nextBoolean())
+                {
+                        randomDegree = 2;
+                }
+                else
+                {
+                        randomDegree = 3;
+                }
+                
+                /*
+                 * We can skip straight to step 3 (which is after the if 
+                 * statement) of the paper's description of the insert function 
+                 * if the leaf's parent is both the LAST node of its level AND 
+                 * its either got a degree of 3 OR the random degree we chose 
+                 * above is equal to 3.
+                 */
+                if(!((this.getNeighbor(ithParent, level) == null) && (ithParent.getDegree() == 3 || randomDegree == 3)))
+                {
+                    /*
+                     * We initialize w to 1
+                     */
+                    w = 1; 
+
+                    while(parent.getParent() != null)
+                    {
+                    tempNode = parent;		  
+                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                    /*
+                     * if(parent.getNextSibling() != null)
+                     *  sibling = parent.getNextSibling();
+                     *  go to parent and give it a new child. Take the next w 
+                     *  children of the current node and the new child/sibling their
+                     *  parent.
+                     *  w = max(0, sibling.getDegree() + w - randomDegree);
+                     * else	
+                     */
+                    parent = (OTree_Node)parent.getParent();
+                    }
+                }
 	}
 	//
         
@@ -326,8 +353,8 @@ public class ObliviousTree {
              */
             
             /*
-             * I need to eliminate this while() at some point. Make the function
-             * recursive?
+             * I need to eliminate this while() at some point.
+             * 
              */
             while(loop)
             {
