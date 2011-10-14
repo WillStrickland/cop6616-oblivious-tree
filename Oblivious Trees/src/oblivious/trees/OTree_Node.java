@@ -1,9 +1,12 @@
 package oblivious.trees;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 public class OTree_Node extends OTree_Elem {
 
 	// Instance Variable
-	protected OTree_Elem[] children;
+	private OTree_Elem[] children;
 	private int degree;
 	private int leafCnt;
 	
@@ -15,9 +18,7 @@ public class OTree_Node extends OTree_Elem {
 		// initialize children array
 		children = new OTree_Elem[OTree_Elem.MAX_CHILDREN];
 		// initialize all children to null
-		for (int i=0; i<OTree_Elem.MAX_CHILDREN; i++){
-			children[i] = null;
-		}
+		Arrays.fill(children, null);
 		// set degree and leaf count to zero
 		degree = 0;
 		leafCnt = 0;
@@ -31,9 +32,7 @@ public class OTree_Node extends OTree_Elem {
 		// initialize children array
 		children = new OTree_Elem[OTree_Elem.MAX_CHILDREN];
 		// initialize all children to null
-		for (int i=0; i<OTree_Elem.MAX_CHILDREN; i++){
-			children[i] = null;
-		}
+		Arrays.fill(children, null);
 		// set degree and leaf count to zero
 		degree = 0;
 		leafCnt = 0;
@@ -102,7 +101,7 @@ public class OTree_Node extends OTree_Elem {
 			return false;
 		}
 	}
-	protected boolean swapChildren(int i, int j){
+	public boolean swapChildren(int i, int j){
 		// catch invalid indices
 		if (i==j || i<0 || j<0 || i>=this.degree || j>=this.degree){
 			return false;
@@ -131,13 +130,46 @@ public class OTree_Node extends OTree_Elem {
 		}
 	}
 	public OTree_Elem[] getChildren(){
-		// make temporary array with size of this nodes degree
-		// if degree is zero return null
-		OTree_Elem[] tmp = (this.degree>0) ? new OTree_Elem[this.degree] : null;
-		// iterate for degree and copy child set
-		for (int i=0; i<this.degree; i++){
-			 tmp[i] = children[i];
+		// check that children is initialized and has children
+		if (children!=null && this.degree>0){
+			try { 
+				// return copy of 
+				return Arrays.copyOf(this.children, this.degree);
+			} catch (Exception e){
+				// return null due to exception
+				return null;
+			}
+		} else {
+			// return null due to missing children
+			return null;
 		}
-		return tmp;
+	}
+	
+	// Representation
+	/** reconstruct an individual OTree_Node from byte array
+	 *  checks size parameter against actual remaining bytes
+	 *  similar to de-serialization, but we have other aims in mind
+	 *  @param b byte array to read in
+	 *  @return reconstructed OTree_Node
+	 */
+	public static OTree_Node fromBytes(byte[] b){
+		// initialize new OTree_Node
+		OTree_Node tmp = new OTree_Node();
+		// create byte buffer just for size integer
+		ByteBuffer buf = ByteBuffer.wrap(b, 0, 4);
+		// compare recorded size to actual
+		if (buf.getInt()==(b.length-4)){
+			try { 
+				tmp.setSig(Arrays.copyOfRange(b, 4, b.length-1));
+			} catch (Exception e){
+				// return null due to exception
+				return null;
+			}
+			// return reconstructed OTree_Leaf
+			return tmp;
+		} else {
+			// return null due to size mismatch
+			return null;
+		}
 	}
 }
