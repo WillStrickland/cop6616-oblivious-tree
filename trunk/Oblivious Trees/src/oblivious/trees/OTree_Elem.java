@@ -1,5 +1,8 @@
 package oblivious.trees;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 public abstract class OTree_Elem {
 	final static int MAX_CHILDREN = 3;
 	// Instance properties
@@ -26,13 +29,19 @@ public abstract class OTree_Elem {
 	 *  @return true if successful, false if failure
 	 */
 	public boolean setSig(byte[] s){
+		// check input array
 		if (s!=null && s.length>0){
-			this.sig = new byte[s.length];
-			for (int i=0; i<this.sig.length; i++){
-				this.sig[i] = s[i];
+			try {
+				// copy input into sig
+				this.sig = Arrays.copyOf(s, s.length);
+			} catch (Exception e){
+				// return false due to exception
+				return false;
 			}
+			// return success
 			return true;
 		} else {
+			// return false due to invalid input
 			return false;
 		}
 	}
@@ -72,7 +81,7 @@ public abstract class OTree_Elem {
 	 *  @param j index of second child
 	 *  @return true if successful, false if failure
 	 */
-	protected abstract boolean swapChildren(int i, int j);
+	public abstract boolean swapChildren(int i, int j);
 	/** calculate the number of leaves below (or at) this node of the tree. Does not calculate re-calculate child subtrees.
 	 */
 	public abstract void calcLeafCnt();
@@ -82,7 +91,7 @@ public abstract class OTree_Elem {
 	public abstract void calcLeafCnt(boolean forceCalc);
 	/** trickle updates in leaf count to top of tree. 
 	 */
-	protected void trickleLeafCnt(){
+	public void trickleLeafCnt(){
 		// starting at the parent of this node
 		OTree_Elem tmp = this.parent;
 		// iterate to root
@@ -98,11 +107,19 @@ public abstract class OTree_Elem {
 	/** @return signature of this OTree_Elem
 	 */
 	public byte[] getSig(){
-		byte[] tmp = new byte[this.sig.length];
-		for (int i=0; i<this.sig.length; i++){
-			tmp[i] = this.sig[i];
+		// check if signature initialized and not empty
+		if (sig!=null && sig.length>0){
+			try { 
+				// return copy of signature
+				return Arrays.copyOf(this.sig, this.sig.length);
+			} catch (Exception e){
+				// Return null due to exception
+				return null;
+			}
+		} else {
+			// Return null due to sig not being initialized
+			return null;
 		}
-		return tmp;
 	}
 	/** @return degree of this node of tree
 	 */
@@ -166,5 +183,21 @@ public abstract class OTree_Elem {
 		}
 		// next element if found or return null
 		return rtn;
+	}
+	
+	// Representation
+	/** convert the individual OTree Element to an array of bytes.
+	 *  similar to serialization, but we have other aims in mind
+	 *  @return byte[] representing node {sig_size}{sig}
+	 */
+	public byte[] toBytes(){
+		// make byte buffer big enough for integer signature length and whole signature
+		ByteBuffer buf = ByteBuffer.allocate(4+this.sig.length);
+		// insert length
+		buf.putInt(this.sig.length);
+		//insert sign
+		buf.put(this.sig);
+		// return as array (unless improbable error)
+		return (buf.hasArray()) ? buf.array() : null;
 	}
 }
