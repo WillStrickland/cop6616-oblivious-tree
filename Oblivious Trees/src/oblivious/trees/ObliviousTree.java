@@ -317,38 +317,78 @@ public class ObliviousTree {
             /*
              * There are 2 stop conditions:
              * 
-             * If the node is equal to null, this means you've gone past the
+             * If the parent is equal to null, this means you've gone past the
              * root. This indicates that the given node has no neighbor and it
              * is the last node of its level.
              * 
              * If the node you've reached has the same level as the given node,
              * you've found the neighbor.
              */
+            
+            /*
+             * I need to eliminate this while() at some point. Make the function
+             * recursive?
+             */
             while(loop)
             {
+                /*
+                 * If the parent is null, you've gone the past the root.
+                 * Return 'No Neighbor'.
+                 */
                 if(parent == null)
                 {
                     return null;
                 }
                 else
                 {
+                    /*
+                     * Is the current node the last child of its parent?
+                     */
                     if(parent.getChild(parent.getDegree() - 1) == previous)
                     {
+                        /*
+                         * If it is, you need to go up one more level (on the
+                         * path from the root to the leaf node).
+                         */
                         previous = parent;
                         parent = (OTree_Node)parent.getParent();
+                        /*
+                         * Decrement the level counter so you know how far up
+                         * the tree you are.
+                         */
                         levelCounter--;
                     }
                     else
                     {
+                        /*
+                         * If the current node is NOT the last child of its 
+                         * parent, then you've gone far enough up the tree that
+                         * you can stop.
+                         */
                         loop = false;
                     }
                 }                
             }
             
+            /*
+             * Set the current neighbor to the next sibling of the current node.
+             * Will's getNextSibling() function is quite useful here.
+             *
+             */
             neighbor = (OTree_Node)previous.getNextSibling();
+            /* 
+             * Its quite possible the given node is the first or middle child of  
+             * a sub-tree of degree 2 or 3. In that case, the levelCounter never
+             * decremented in the previous loop, and its next sibling is its
+             * next neighbor.
+             */
             
             while(levelCounter != level)
             {
+                /*
+                 * Otherwise, keep going left until you reach the same level
+                 * as the given node.
+                 */
                 neighbor = (OTree_Node)neighbor.getChild(0);
                 levelCounter++;                
             }
