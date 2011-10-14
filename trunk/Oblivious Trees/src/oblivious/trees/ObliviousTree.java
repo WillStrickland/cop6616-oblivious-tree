@@ -298,20 +298,25 @@ public class ObliviousTree {
                 {
                         randomDegree = 3;
                 }
-                
                 /*
-                 * We can skip straight to step 3 (which is after the if 
-                 * statement) of the paper's description of the insert function 
-                 * if the leaf's parent is both the LAST node of its level AND 
-                 * its either got a degree of 3 OR the random degree we chose 
-                 * above is equal to 3.
+                 * We must traverse up the tree and perform the randomization
+                 * procedure for every node that is along the path between the
+                 * root and the leaf node the user wanted to add.
                  */
                 while(ithParent != null)
                 {
+                    /*
+                     * We can skip straight to step 3 (which is after the if 
+                     * statement) of the paper's description of the insert function 
+                     * if the leaf's parent is both the LAST node of its level AND 
+                     * its either got a degree of 3 OR the random degree we chose 
+                     * above is equal to 3.
+                     */
                     if(!((this.getNeighbor(ithParent, level) == null) && (ithParent.getDegree() == 3 || randomDegree == 3)))
                     {
                         /*
-                         * We initialize w to 1
+                         * If the above condition is not met, we initialize a 
+                         * variable w to 1.
                          */
                         w = 1; 
                         
@@ -370,9 +375,7 @@ public class ObliviousTree {
                                         {
                                             parent = (OTree_Node)parent.getParent();
                                         }
-                                    }
-                                    
-                                    
+                                    }                                                                        
                                 }
                                 
                                 w = 0;
@@ -398,11 +401,36 @@ public class ObliviousTree {
                     }
                     
                     //MUST RECOMPUTE SIZE FIELDS
+                    //Also recomputer the size fields of the parent of the leaf
+                    //node to its level neighbor.
                     
                     ithParent = (OTree_Node)ithParent.getParent();
                 }
 	}
 	//
+        
+        public synchronized void delete(int i)
+	{
+				/*
+		 * Create a new leaf node based on the new data
+		 */
+		int w, randomDegree, level = 0, childRemoveCount;
+		int maxLeaves = treeNodes.size();
+		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
+	
+                treeNodes.removeElementAt(i);
+            
+                
+	} //*/
+        
+        /*
+         * Updates the size information of all nodes along the path from the root
+         * to the leaf node i
+         */
+        public synchronized void updateSizes(int i)
+        {
+            
+        }
         
         /**
          * Returns either the node following the given node at its given level
@@ -501,13 +529,6 @@ public class ObliviousTree {
             
             return neighbor;            
         }
-        
-	public synchronized boolean delete()
-	{
-		//OTree_Leaf = deletedNode;
-		
-		return false;
-	} //*/
 
 	/**
 	 *  Fetches the ith leaf of the tree
