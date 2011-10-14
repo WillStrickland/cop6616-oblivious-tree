@@ -253,6 +253,7 @@ public class ObliviousTree {
 	 *  position i.
 	 *  @param value value to be inserted
 	 *  @param i index of chunk/leaf to insert into
+         * @param Signature Object
 	 *  @return void
 	 */
 	public synchronized void insert(byte[] value, int i)
@@ -260,9 +261,9 @@ public class ObliviousTree {
 		/*
 		 * Create a new leaf node based on the new data
 		 */
-		int w, randomDegree, level = 0;
+		int w, randomDegree, level = 0, childRemoveCount;
 		int maxLeaves = treeNodes.size();
-		OTree_Node tempNode, sibling, ithParent, parent;
+		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
 		OTree_Leaf newLeaf = new OTree_Leaf();
 		newLeaf.setSig(value);
 		/*
@@ -305,28 +306,100 @@ public class ObliviousTree {
                  * its either got a degree of 3 OR the random degree we chose 
                  * above is equal to 3.
                  */
-                if(!((this.getNeighbor(ithParent, level) == null) && (ithParent.getDegree() == 3 || randomDegree == 3)))
+                while(ithParent != null)
                 {
-                    /*
-                     * We initialize w to 1
-                     */
-                    w = 1; 
-
-                    while(parent.getParent() != null)
+                    if(!((this.getNeighbor(ithParent, level) == null) && (ithParent.getDegree() == 3 || randomDegree == 3)))
                     {
-                    tempNode = parent;		  
-                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
-                    /*
-                     * if(parent.getNextSibling() != null)
-                     *  sibling = parent.getNextSibling();
-                     *  go to parent and give it a new child. Take the next w 
-                     *  children of the current node and the new child/sibling their
-                     *  parent.
-                     *  w = max(0, sibling.getDegree() + w - randomDegree);
-                     * else	
-                     */
-                    parent = (OTree_Node)parent.getParent();
+                        /*
+                         * We initialize w to 1
+                         */
+                        w = 1; 
+                        
+                        while(w != 0)
+                        {
+                            ithTemp = ithParent;
+                            
+                            if(rndSrc.nextBoolean())
+                            {
+                                    randomDegree = 2;
+                            }
+                            else
+                            {
+                                    randomDegree = 3;
+                            }
+                            
+                            if((randomDegree == w) || (this.getNeighbor(ithTemp, level) == null))
+                            {
+                                if(ithTemp.getParent().getDegree() == 2)
+                                {
+                                    OTree_Node newChild = new OTree_Node();
+                                    ithTemp.getParent().addChild(newChild);
+                                    
+                                    childRemoveCount = 0;
+                                    
+                                    while(childRemoveCount < w)
+                                    {
+                                        newChild.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
+                                        ithTemp.removeChild(ithTemp.getDegree() - 1);
+                                        childRemoveCount++;
+                                    }
+                                }
+                                else
+                                {
+                                    parent = (OTree_Node)ithTemp.getParent();
+                                    
+                                    while(parent != null)
+                                    {
+                                        if(parent.getDegree() == 2)
+                                        {
+                                            OTree_Node newChild = new OTree_Node();
+                                            parent.addChild(newChild);
+
+                                            childRemoveCount = 0;
+
+                                            while(childRemoveCount < w)
+                                            {
+                                                newChild.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
+                                                ithTemp.removeChild(ithTemp.getDegree() - 1);
+                                                childRemoveCount++;
+                                            }
+                                            
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            parent = (OTree_Node)parent.getParent();
+                                        }
+                                    }
+                                    
+                                    
+                                }
+                                
+                                w = 0;
+                            }
+                            else
+                            {
+                                ithTemp = this.getNeighbor(ithParent, level);
+                                int t = ithTemp.getDegree();
+                                
+                                childRemoveCount = 0;
+
+                                while(childRemoveCount < w)
+                                {
+                                    ithTemp.addChild(ithParent.getChild(ithParent.getDegree() - 1));
+                                    ithParent.removeChild(ithParent.getDegree() - 1);
+                                    childRemoveCount++;
+                                }
+                                
+                                w = java.lang.Math.max(0, t + w - randomDegree);                                                                                                
+                            }
+                        }
+                        
                     }
+                    
+                    //MUST RECOMPUTE SIZE FIELDS
+                    
+                    ithParent = (OTree_Node)ithParent.getParent();
                 }
 	}
 	//
