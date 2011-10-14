@@ -297,6 +297,65 @@ public class ObliviousTree {
 		}
 	}
 	//
+        
+        /**
+         * Returns either the node following the given node at its given level
+         * (its level neighbor), or null (which means its the last node of that 
+         * level)
+         * @param OTree_Node node
+         * @param int level
+         * @return OTree_Node neighbor
+         */
+        public synchronized OTree_Node getNeighbor(OTree_Node node, int level)
+        {
+            OTree_Node parent = (OTree_Node)node.getParent();
+            OTree_Node previous = node;
+            OTree_Node neighbor;
+            int levelCounter = level;
+            boolean loop = true;
+            
+            /*
+             * There are 2 stop conditions:
+             * 
+             * If the node is equal to null, this means you've gone past the
+             * root. This indicates that the given node has no neighbor and it
+             * is the last node of its level.
+             * 
+             * If the node you've reached has the same level as the given node,
+             * you've found the neighbor.
+             */
+            while(loop)
+            {
+                if(parent == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    if(parent.getChild(parent.getDegree() - 1) == previous)
+                    {
+                        previous = parent;
+                        parent = (OTree_Node)parent.getParent();
+                        levelCounter--;
+                    }
+                    else
+                    {
+                        loop = false;
+                    }
+                }                
+            }
+            
+            neighbor = (OTree_Node)previous.getNextSibling();
+            
+            while(levelCounter != level)
+            {
+                neighbor = (OTree_Node)neighbor.getChild(0);
+                levelCounter++;                
+            }
+            
+            return neighbor;            
+        }
+        
 	public synchronized boolean delete()
 	{
 		//OTree_Leaf = deletedNode;
