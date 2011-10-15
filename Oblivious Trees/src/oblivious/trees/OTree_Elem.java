@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public abstract class OTree_Elem {
-	final static int MAX_CHILDREN = 3;
+	final static int MAX_CHILDREN = 4;
 	// Instance properties
 	private OTree_Elem parent;	// parent node in tree
 	private byte[] sig;			// signature of this node
