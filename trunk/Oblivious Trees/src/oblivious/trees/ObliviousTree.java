@@ -417,7 +417,7 @@ public class ObliviousTree {
                 /*
 		 * Create a new leaf node based on the new data
 		 */
-		int w, randomDegree, level = 0, childRemoveCount;
+		int w, randomDegree, level = 0, childRemoveCount, t;
 		int maxLeaves = treeNodes.size();
 		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
                 OTree_Elem[] children;
@@ -489,8 +489,49 @@ public class ObliviousTree {
                             }
                             
                             ithParent = this.getNeighbor(ithTemp, level);
+                            
+                            t = ithParent.getDegree();
+                            
+                            if(w >= t)
+                            {
+                                childRemoveCount = 0;
+                                
+                                while(childRemoveCount < w)
+                                {
+                                    ithParent.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
+                                    ithTemp.removeChild(ithTemp.getDegree() - 1);
+                                    childRemoveCount++;
+                                }
+                                
+                            }
+                            else
+                            {                                                            
+                                if(rndSrc.nextBoolean())
+                                {
+                                    randomDegree = 2;
+                                }
+                                else
+                                {
+                                    randomDegree = 3;
+                                }
+                                
+                                childRemoveCount = 0;
+
+                                while(childRemoveCount < w)
+                                {
+                                    ithParent.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
+                                    ithTemp.removeChild(ithTemp.getDegree() - 1);
+                                    childRemoveCount++;
+                                }
+                                
+                                w = java.lang.Math.max(0, t + w - randomDegree);
+                            }
+                            
+                            //--??
                         }
                     }
+                    
+                    ithParent = (OTree_Node)ithParent.getParent();
                 }
                 
 	} //*/
