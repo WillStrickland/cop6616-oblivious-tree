@@ -417,9 +417,62 @@ public class ObliviousTree {
 		int w, randomDegree, level = 0, childRemoveCount;
 		int maxLeaves = treeNodes.size();
 		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
+                OTree_Elem[] children;
+                
+                /*
+		 * Fetch the current ith (zero-aligned) leaf node
+		 */
+		OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
+		/*
+		 * Get the children of the parent of the ith leaf, so we can 
+                 * delete the given child before removing it from the Vector
+		 */
+		children = iThLeaf.getParent().getChildren();
+                ithParent = parent =(OTree_Node)iThLeaf.getParent();
+                
+                while(parent != null)
+                {
+                    level++;
+                    parent = (OTree_Node)parent.getParent();
+                }
+                
+                for(int cnt = 0; cnt < children.length; cnt++)
+                {
+                    if(iThLeaf.getParent().getChild(cnt) == iThLeaf)
+                    {
+                        iThLeaf.getParent().removeChild(cnt);
+                        break;
+                    }
+                }
 	
                 treeNodes.removeElementAt(i);
-            
+                
+                while(ithParent !=  null)
+                {                
+                    if(this.getNeighbor(ithParent, level) == null)
+                    {
+                        if(ithParent.getChildren() == null)
+                        {
+                            ithTemp = ithParent;
+                            ithParent = (OTree_Node)ithParent.getParent();
+                        }
+                        else
+                        {
+                            /*
+                             * if the node is the root or below it, recompute
+                             * the size information for all the nodes along the
+                             * path. Else, delete the current root and makes
+                             * its child along the path new root.
+                             */
+                            
+                            root = ithParent;
+                        }
+                    }
+                    else
+                    {
+                        
+                    }
+                }
                 
 	} //*/
         
