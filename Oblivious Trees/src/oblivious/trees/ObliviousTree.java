@@ -324,6 +324,19 @@ public class ObliviousTree {
                         
                         while(w != 0)
                         {
+                            /*
+                             * If the node we are on the last node of its level,
+                             * then insert a new node and set its degree to w.
+                             * Make the last w children of the current node the 
+                             * next w children of the newly inserted node.
+                             * 
+                             * If we are not on the last node of the level,
+                             * (which means we are still propogating
+                             * through the level), then find the level 
+                             * neighbor of the current, and set the last w 
+                             * children of the current node to the first w
+                             * children of the neighbor.
+                             */
                             ithTemp = ithParent;
                             
                             if(rndSrc.nextBoolean())
