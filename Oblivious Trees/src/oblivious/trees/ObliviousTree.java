@@ -502,6 +502,11 @@ public class ObliviousTree {
             
         }
         
+        public synchronized void updateHashes(int i)
+        {
+            
+        }
+        
         /**
          * Returns either the node following the given node at its given level
          * (its level neighbor), or null (which means its the last node of that 
