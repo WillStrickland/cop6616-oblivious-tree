@@ -405,13 +405,14 @@ public class ObliviousTree {
                     //node to its level neighbor.
                     
                     ithParent = (OTree_Node)ithParent.getParent();
+                    level--;
                 }
 	}
 	//
         
         public synchronized void delete(int i)
 	{
-				/*
+                /*
 		 * Create a new leaf node based on the new data
 		 */
 		int w, randomDegree, level = 0, childRemoveCount;
@@ -470,7 +471,23 @@ public class ObliviousTree {
                     }
                     else
                     {
+                        w = 1;
                         
+                        while(w != 0)
+                        {
+                            ithTemp = ithParent;
+                            
+                            if(rndSrc.nextBoolean())
+                            {
+                                randomDegree = 2;
+                            }
+                            else
+                            {
+                                randomDegree = 3;
+                            }
+                            
+                            ithParent = this.getNeighbor(ithTemp, level);
+                        }
                     }
                 }
                 
