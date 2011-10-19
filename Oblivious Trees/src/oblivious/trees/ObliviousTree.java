@@ -6,7 +6,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Vector;
 
@@ -661,8 +663,7 @@ public class ObliviousTree {
             return neighbor;            
         }
 
-	/**
-	 *  Fetches the ith leaf of the tree
+	/** Fetches the ith leaf of the tree
 	 *  @param i index of leaf to return (indices start at 1)
 	 */
 	private synchronized OTree_Leaf getLeaf(int i)
@@ -673,6 +674,34 @@ public class ObliviousTree {
 		return leaf;
 	}
 	
+	/** Update the signature for all the OTree_Elem in list.
+	  * Method designed to operate only on internal nodes.
+	  * make sure that the collection returns elements such that children will be processed before their parent
+	  * @param l collection that holds nodes to be updated (children first)
+	  * @param signer signature for signing must be initialized for signing
+	  * @return true if successful, false if failure
+	  */
+	private static boolean updateSigs(Collection<OTree_Elem> l, Signature signer){
+		try {
+			// for node each in collection
+			for (OTree_Elem n : l){
+				// get children set
+				OTree_Elem[] C = n.getChildren();
+				// if has children
+				if (C != null && C.length>0){
+					// compile signature from children from left to right. 
+					for (OTree_Elem c : C){
+						signer.update(c.getSig());
+					}
+					// finish signature computation at set into this node
+					n.setSig(signer.sign());
+				}
+			}
+			return true;
+		} catch (SignatureException e) {
+			return false;
+		}
+	}
 	/* failed attempt at breadth-first implementation
 	 * generate the signature output of algorithm
 	 * outputs each node in signature as {sig_size}{sig}{degree} in breadth-first order
