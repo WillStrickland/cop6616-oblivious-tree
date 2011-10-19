@@ -7,12 +7,14 @@ public abstract class OTree_Elem {
 	final static int MAX_CHILDREN = 4;
 	// Instance properties
 	private OTree_Elem parent;	// parent node in tree
+        private OTree_Elem neighbor;    // level neighbor. Allows retrieval of neighbor in O(1) time
 	private byte[] sig;			// signature of this node
 	
 	// Constructors
 	/** OTree_Elem with without parent (root) */
 	public OTree_Elem(){
 		parent = null;
+                neighbor = null;
 		sig = null;
 	}
 	/** OTree_Elem as the child of given node.
@@ -20,6 +22,7 @@ public abstract class OTree_Elem {
 	 */
 	public OTree_Elem(OTree_Elem p){
 		parent = p;
+                neighbor = null;
 		sig = null;
 	}
 	
@@ -60,6 +63,22 @@ public abstract class OTree_Elem {
 			return false;
 		}
 	}
+        /** Changes the level neighbor node of this node to the given node, if it exists
+         * @param n
+         * @return true if successful, false if failure
+         */
+        public boolean setNeighbor(OTree_Elem n)
+        {            
+            if(n != null)
+            {
+                this.neighbor = n;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 	/** replaces the pointer to one child with another. Cannot increase degree of node.
 	 *  @param i index of child to be updated
 	 *  @param c child to be set at location
@@ -132,6 +151,13 @@ public abstract class OTree_Elem {
 	public OTree_Elem getParent(){
 		return this.parent;
 	}
+        /**
+         * @return level neighbor of this node, null if it has no neighbor
+         */
+        public OTree_Elem getNeighbor()
+        {
+            return this.neighbor;
+        }
 	/** return the child at given position of child set.
 	 *  @param i position of child
 	 *  @return child OTree_Elem if child exists else null
