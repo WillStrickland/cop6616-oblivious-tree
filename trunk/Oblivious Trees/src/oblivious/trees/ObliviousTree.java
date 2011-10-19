@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.util.NoSuchElementException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -151,6 +152,82 @@ public class ObliviousTree {
 	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
 	 */
+        
+        private synchronized void create()
+        {
+            	int randomDegree;
+		int numOfNodesAtLevel;
+		int nodesAdded = 0;
+		int nodeIndex = 0;
+		int addCount;
+		int traversingLevel;
+		OTree_Node tempNode;
+                
+                /*
+                 * Holds the nodes contained at the previous level. It is 
+                 * instantiated with the nodes at the leaf level
+                 */
+                Vector<OTree_Elem> previousLevel = treeNodes;
+                /*
+                 * Holds the nodes being added to the current level.
+                 */
+                Vector<OTree_Elem> currentLevel;
+                
+                while(previousLevel.size() > 1)
+                {
+                    currentLevel = new Vector<OTree_Elem>();
+                    numOfNodesAtLevel = previousLevel.size();
+                    
+                    for(addCount = 0; addCount < numOfNodesAtLevel; addCount += randomDegree)
+                    {
+                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                        randomDegree = (((addCount + randomDegree) + 1) > numOfNodesAtLevel) ? ((addCount + randomDegree) + 1) - numOfNodesAtLevel : randomDegree;
+                        tempNode = new OTree_Node();
+                        
+                        switch(randomDegree)
+                        {
+                            case 1:
+                                previousLevel.get(addCount).setParent(tempNode);
+                                tempNode.addChild(previousLevel.get(addCount));
+                                break;
+                            case 2:                                
+                                previousLevel.get(addCount).setParent(tempNode);
+                                tempNode.addChild(previousLevel.get(addCount));
+                                previousLevel.get(addCount + 1).setParent(tempNode);
+                                tempNode.addChild(previousLevel.get(addCount + 1));
+                                break;
+                            case 3:
+                                previousLevel.get(addCount).setParent(tempNode);
+                                tempNode.addChild(previousLevel.get(addCount));
+                                previousLevel.get(addCount + 1).setParent(tempNode);
+                                tempNode.addChild(previousLevel.get(addCount + 1));
+                                previousLevel.get(addCount + 2).setParent(tempNode);
+                                tempNode.addChild(previousLevel.get(addCount + 2));
+                                break;
+                        }
+                        
+                        try
+                        {
+                            currentLevel.lastElement().setNeighbor(tempNode);
+                        }
+                        catch(NoSuchElementException e)
+                        {
+                        }
+                        
+                        currentLevel.add(tempNode);
+                    }
+                    
+                    previousLevel = currentLevel;
+                }
+                
+                try
+                {
+                    root = (OTree_Node)previousLevel.firstElement();
+                }
+                catch(NoSuchElementException e)
+                {                    
+                }
+        }
 	private synchronized void generateTree()
 	{		
 		int randomDegree;
@@ -648,8 +725,7 @@ public class ObliviousTree {
              * a sub-tree of degree 2 or 3. In that case, the levelCounter never
              * decremented in the previous loop, and its next sibling is its
              * next neighbor.
-             */
-            
+             */            
             while(levelCounter != level)
             {
                 /*
