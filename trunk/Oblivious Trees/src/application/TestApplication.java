@@ -59,7 +59,7 @@ public class TestApplication {
 			SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
 			// create public-private key pair
 			KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
-			gen.initialize(2048, rnd);
+			gen.initialize(1024, rnd);
 			KeyPair keys = gen.generateKeyPair();
 			// create signature object
 			sig[0] = Signature.getInstance("SHA1withDSA");
