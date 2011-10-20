@@ -94,10 +94,13 @@ public class ObliviousTree {
 		System.out.println("output verify = "+ObliviousTree.verifySig(testfile, signOut, signatures[1]));
 		// sabotage signature
 		//testfile[54]= (byte) (testfile[54]+1);
+		byte[] sabtmp = tmpNodes.get(0).getSig();
+		sabtmp[5] = (byte) (sabtmp[5]+1);
+		tmpNodes.get(0).setSig(sabtmp);
 		// output signature
 		signOut = test.generateSig();
 		// verify signature
-		System.out.println("sabotage verify = "+ObliviousTree.verifySig(testfile, signOut, signatures[1]));
+		System.out.println("sabotaged verify = "+ObliviousTree.verifySig(testfile, signOut, signatures[1]));
 		
 	} //*/
 	
