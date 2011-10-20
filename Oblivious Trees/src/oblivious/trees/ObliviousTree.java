@@ -2,6 +2,8 @@ package oblivious.trees;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -10,7 +12,6 @@ import java.security.SignatureException;
 import java.util.NoSuchElementException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Vector;
 
 /** Oblivious Tree - COP 6616
@@ -19,10 +20,10 @@ import java.util.Vector;
  */
 public class ObliviousTree {
 
-	/*
+	//
 	public static void main(String[] args) {
 		System.out.println("Hello, World!!!");
-		System.out.println("chunkSize = "+ObliviousTree.CHUNK_SIZE);
+		/*System.out.println("chunkSize = "+ObliviousTree.CHUNK_SIZE);
 		System.out.println("PRNG = "+ObliviousTree.PRNG_Info());
 		System.out.println("DIGEST = "+ObliviousTree.Digest_Info());
 		//System.out.println("initPRNG = "+ObliviousTree.initPRNG());
@@ -30,9 +31,101 @@ public class ObliviousTree {
 		ObliviousTree O = new ObliviousTree();
 		System.out.println("PRNG = "+ObliviousTree.PRNG_Info());
 		System.out.println("DIGEST = "+ObliviousTree.Digest_Info());
-
+		//*/
+		ObliviousTree.testVerify();
+		
 	} //*/
-
+	
+	// test class for making sure verification and such works
+	private static void testVerify(){
+		// get signature objects for signing and verifying
+		// [0] is for signing
+		// [1] is for verifying
+		Signature[] signatures = initSignature();	
+		byte[] testfile = new byte[550];
+		byte[] signOut;
+		ObliviousTree test = new ObliviousTree();
+		test.treeNodes = new Vector<OTree_Elem>();
+		ObliviousTree.rndSrc.nextBytes(testfile);
+		Vector<OTree_Elem> tmpNodes = new Vector<OTree_Elem>();
+		// parse out file chunk signatures to each node
+		int i=0;
+		while(i<testfile.length){
+			OTree_Leaf tmp = new OTree_Leaf();
+			int this_chunk = (testfile.length-i>ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : testfile.length-i ;
+			try {
+				signatures[0].update(testfile, i, this_chunk);
+				tmp.setSig(signatures[0].sign());
+				i+=this_chunk;
+			} catch (SignatureException e) { ; }
+			test.treeNodes.add(tmp);
+		}
+		// manually build tree
+		tmpNodes.add(new OTree_Node());
+		tmpNodes.get(0).addChild(test.treeNodes.get(0));
+		test.treeNodes.get(0).setParent(tmpNodes.get(0));
+		tmpNodes.get(0).addChild(test.treeNodes.get(1));
+		test.treeNodes.get(1).setParent(tmpNodes.get(0));
+		tmpNodes.add(new OTree_Node());
+		tmpNodes.get(1).addChild(test.treeNodes.get(2));
+		test.treeNodes.get(2).setParent(tmpNodes.get(1));
+		tmpNodes.get(1).addChild(test.treeNodes.get(3));
+		test.treeNodes.get(3).setParent(tmpNodes.get(1));
+		tmpNodes.get(1).addChild(test.treeNodes.get(4));
+		test.treeNodes.get(4).setParent(tmpNodes.get(1));
+		tmpNodes.add(new OTree_Node());
+		tmpNodes.get(2).addChild(test.treeNodes.get(5));
+		test.treeNodes.get(5).setParent(tmpNodes.get(2));
+		tmpNodes.add(test.root);
+		tmpNodes.get(3).addChild(tmpNodes.get(0));
+		tmpNodes.get(0).setParent(tmpNodes.get(3));
+		tmpNodes.get(3).addChild(tmpNodes.get(1));
+		tmpNodes.get(1).setParent(tmpNodes.get(3));
+		tmpNodes.get(3).addChild(tmpNodes.get(2));
+		tmpNodes.get(2).setParent(tmpNodes.get(3));
+		
+		// set signatures for internal nodes
+		ObliviousTree.updateSigs(tmpNodes, signatures[0]);
+		// internally verify
+		System.out.println("internal verify = "+ObliviousTree.verifySigs(tmpNodes, signatures[1]));
+		// output signature
+		signOut = test.generateSig();
+		// verify signature
+		System.out.println("output verify = "+ObliviousTree.verifySig(testfile, signOut, signatures[1]));
+		// sabotage signature
+		//testfile[54]= (byte) (testfile[54]+1);
+		// output signature
+		signOut = test.generateSig();
+		// verify signature
+		System.out.println("sabotage verify = "+ObliviousTree.verifySig(testfile, signOut, signatures[1]));
+		
+	} //*/
+	
+	/** Generates a public-private key pair at random and
+	 *  returns a signature for signing and another for verifying
+	 * 
+	 *  @return Signature[] index 0 = signing, index 1 = verifying
+	 */
+	private static Signature[] initSignature(){
+		Signature[] sig = new Signature[2];
+		try {
+			// create random source for key generation
+			SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
+			// create public-private key pair
+			KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
+			gen.initialize(1024, rnd);
+			KeyPair keys = gen.generateKeyPair();
+			// create signature object
+			sig[0] = Signature.getInstance("SHA1withDSA");
+			sig[0].initSign(keys.getPrivate());
+			sig[1] = Signature.getInstance("SHA1withDSA");
+			sig[1].initVerify(keys.getPublic());
+		} catch (Exception e){
+			return null;
+		}
+		return sig;
+	}
+	
 	/**
 	 * Constructor generates initial leaf node using
 	 * using a given input file.
@@ -42,7 +135,7 @@ public class ObliviousTree {
 	/* Class Properties */
 	private static SecureRandom rndSrc;			// Random source for creating obliviousness
 	private static MessageDigest digest;		// Secure hashing function for leaves
-	public final static int CHUNK_SIZE = 1000;	// File chunk size in bytes
+	public final static int CHUNK_SIZE = 100;	// File chunk size in bytes
 	
 	/* Instance Properties */
 	private OTree_Node root;	// root node of tree
@@ -56,7 +149,7 @@ public class ObliviousTree {
 		root = new OTree_Node();
 	}
 	
-	public ObliviousTree(FileInputStream file)
+	public ObliviousTree(FileInputStream file, Signature signer)
 	{
 		// Initialize crypto stuff
 		initPRNG();
@@ -65,7 +158,7 @@ public class ObliviousTree {
 		root = new OTree_Node();
 		treeNodes = new Vector<OTree_Elem>();
 		//2). Generate leaf nodes from the byte array
-		generateLeaves(file);
+		generateLeaves(file, signer);
 		//3). Create Oblivious Tree
 		generateTree();
 
@@ -126,8 +219,7 @@ public class ObliviousTree {
 	 *  @param byte[] file
 	 *  @return void
 	 */
-	private synchronized void generateLeaves(FileInputStream file)
-	{	
+	private synchronized void generateLeaves(FileInputStream file, Signature signer){	
 		int this_size;
 		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
 		treeNodes.clear();
@@ -136,7 +228,8 @@ public class ObliviousTree {
 			while(true){
 				this_size = file.read(chunk);
 				OTree_Leaf newLeaf = new OTree_Leaf();
-				newLeaf.setSig(ObliviousTree.digest.digest(Arrays.copyOf(chunk,this_size)));
+				signer.update(chunk, 0, this_size);
+				newLeaf.setSig(signer.sign());
 				treeNodes.add(newLeaf);
 				
 				// if less than whole chunk, reached end of file
@@ -153,7 +246,7 @@ public class ObliviousTree {
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
 	 */
         
-        private synchronized void create()
+        private synchronized void create(Signature signer)
         {
             	int randomDegree;
 		int numOfNodesAtLevel;
@@ -337,7 +430,7 @@ public class ObliviousTree {
          * @param Signature Object
 	 *  @return void
 	 */
-	public synchronized void insert(byte[] value, int i)
+	public synchronized void insert(byte[] value, int i, Signature signer)
 	{
 		/*
 		 * Create a new leaf node based on the new data
@@ -504,7 +597,7 @@ public class ObliviousTree {
 	}
 	//
         
-        public synchronized void delete(int i)
+        public synchronized void delete(int i, Signature signer)
 	{
                 /*
 		 * Create a new leaf node based on the new data
@@ -778,6 +871,40 @@ public class ObliviousTree {
 			return false;
 		}
 	}
+	/** Verify the signature for all the OTree_Elem in list.
+	  * Method designed to operate only on internal nodes.
+	  * no limits imposed on order of nodes
+	  * @param l collection that holds nodes to be updated (children first)
+	  * @param verifier signature for verification must be initialized for verification
+	  * @return true if successful, false if failure
+	  */
+	private static boolean verifySigs(Collection<OTree_Elem> l, Signature verifier){
+		boolean rtn = true;
+		try {
+			// for node each in collection
+			for (OTree_Elem n : l){
+				// get children set
+				OTree_Elem[] C = n.getChildren();
+				// if has children
+				if (C != null && C.length>0){
+					// compile data from children from left to right. 
+					for (OTree_Elem c : C){
+						verifier.update(c.getSig());
+					}
+					// finish verification
+					 rtn = verifier.verify(n.getSig());
+					// if verification fail, exit for each
+					if (rtn==false){
+						break;
+					}
+				}
+			}
+			// return the result of verification
+			return rtn;
+		} catch (SignatureException e) {
+			return false;
+		}
+	}
 	/* failed attempt at breadth-first implementation
 	 * generate the signature output of algorithm
 	 * outputs each node in signature as {sig_size}{sig}{degree} in breadth-first order
@@ -870,9 +997,12 @@ public class ObliviousTree {
 		sig.index+=4;
 		
 		// call for each child (left to right)
-		for (OTree_Elem c : Arrays.asList(thisNode.getChildren())){
-			generateSigRecurse(c, sig);
+		if(thisNode.getDegree()>0){
+			for (OTree_Elem c : Arrays.asList(thisNode.getChildren())){
+				generateSigRecurse(c, sig);
+			}	
 		}
+		
 	}
 	/** helper class for storing state of signature output
 	 *  used for outputting signatures and verification
