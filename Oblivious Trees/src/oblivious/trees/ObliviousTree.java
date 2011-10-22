@@ -249,7 +249,7 @@ public class ObliviousTree {
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
 	 */
         
-        private synchronized void create(Signature signer)
+        private synchronized final void create(Signature signer)
         {
             	int randomDegree;
 		int numOfNodesAtLevel;
@@ -424,6 +424,96 @@ public class ObliviousTree {
 		//the tree.
 		root = (OTree_Node)treeNodes.get(nodeIndex);
 	}
+        
+        public synchronized void newInsert(byte[] value, int i, Signature signer)
+        {
+            i = i - 1;
+            OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
+            OTree_Leaf newLeaf = new OTree_Leaf();
+            OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
+            OTree_Node currentNode, newNode, neighbor;
+            int w, randomDegree, oldDegree;
+            
+            newLeaf.setSig(value);            
+            ithParent.addChild(newLeaf);
+            newLeaf.setParent(ithParent);
+            treeNodes.add(i, newLeaf);
+            
+            randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+            
+            /*
+             * The algorithm keeps going up level by level until we pass the
+             * root, at which point we stop
+             */
+            while(ithParent.getParent() != null)
+            {
+                ithParent = (OTree_Node)ithParent.getParent();
+                currentNode = ithParent;
+                
+                if(ithParent.getNeighbor() == null)
+                {
+                    /*
+                     * If the node has no neighbor, then it is a node on the right
+                     * spine, which means we treat it as a 'special case'.
+                     */
+                    if(ithParent.getDegree() == 3 && randomDegree == 3)
+                    {
+                        /*
+                         * According to the Structural Agreement lemma, we're 
+                         * finished because all nodes are accounted for. We just
+                         * need to update the size information along the path
+                         * from the leaf to the root.
+                         */
+                    }
+
+                }
+                else
+                {
+                    w = 1;
+                    
+                    while(w > 0)
+                    {
+                        if(currentNode.getNeighbor() == null)
+                        {
+                            w = 0;
+                        }
+                        else
+                        {
+                            neighbor = (OTree_Node)currentNode.getNeighbor();
+                            /*
+                             * randomDegree, in this case, is equivalent to a 
+                             * newDegree for the node.
+                             */
+                            randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                            oldDegree = neighbor.getDegree();
+                            
+                            for(int migrate = 0; migrate < w; migrate++)
+                            {
+                                neighbor.addChild(currentNode.getChild(currentNode.getDegree() - 1));
+                                currentNode.removeChild(currentNode.getDegree() - 1);
+                            }
+
+                            /*
+                             * Take the original degree of the node, add however
+                             * many nodes you added to it, and subtract it by 
+                             * its new degree. If this is 0, then all nodes are 
+                             * accounted for (AT THAT LEVEL).
+                             * 
+                             * Ex: If the node originally had degree 3, and you
+                             * roll a new degree of 3, then you'll wind up with
+                             * an extra node floating around. So you have to 
+                             * keep going.
+                             */                        
+                            w = (oldDegree + w) - randomDegree;
+                            currentNode = neighbor;                            
+                        }
+                        
+                        
+                    }
+                }
+            }
+            
+        }
 	
 	/** In order to insert a new node, you must provide data (in the form of
 	 *  a byte array) and a position. You want to insert the value into 
