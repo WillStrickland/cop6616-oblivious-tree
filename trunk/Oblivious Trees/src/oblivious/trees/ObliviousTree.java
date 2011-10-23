@@ -431,7 +431,7 @@ public class ObliviousTree {
             OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
             OTree_Leaf newLeaf = new OTree_Leaf();
             OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
-            OTree_Node currentNode, newNode, neighbor;
+            OTree_Node currentNode, newNode, newRoot, neighbor;
             int w, randomDegree, oldDegree;
             
             newLeaf.setSig(value);            
@@ -456,8 +456,22 @@ public class ObliviousTree {
                      * If the node has no neighbor, then it is a node on the right
                      * spine, which means we treat it as a 'special case'.
                      */
-                    if(ithParent.getDegree() == 3 && randomDegree == 3)
+                    if(ithParent.getDegree() == 2 || (ithParent.getDegree() == 3 && randomDegree == 3))
                     {
+                        newNode = new OTree_Node();
+                        newRoot = new OTree_Node();
+                        
+                        root.setNeighbor(newNode);
+                        newNode.addChild(root.getChild(root.getDegree() - 1));
+                        root.getChild(root.getDegree() - 1).setParent(newNode);
+                        root.removeChild(root.getDegree() - 1);
+                        
+                        newRoot.addChild(root);
+                        newRoot.addChild(newNode);
+                        root.setParent(newRoot);
+                        newNode.setParent(newRoot);
+                        root = newRoot;
+                        
                         /*
                          * According to the Structural Agreement lemma, we're 
                          * finished because all nodes are accounted for. We just
@@ -475,7 +489,7 @@ public class ObliviousTree {
                     {
                         randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
                         
-                        if(currentNode.getNeighbor() == null)
+                        if(randomDegree == w || currentNode.getNeighbor() == null)
                         {
                             /*
                              * If you've hit the end of the level and you still
@@ -503,7 +517,7 @@ public class ObliviousTree {
                              * randomDegree, in this case, is equivalent to a 
                              * newDegree for the node.
                              */
-                            randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                            //randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
                             oldDegree = neighbor.getDegree();
                             
                             for(int migrate = 0; migrate < w; migrate++)
