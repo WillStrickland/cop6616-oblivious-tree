@@ -473,6 +473,8 @@ public class ObliviousTree {
                     
                     while(w > 0)
                     {
+                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                        
                         if(currentNode.getNeighbor() == null)
                         {
                             w = 0;
