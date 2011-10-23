@@ -545,6 +545,26 @@ public class ObliviousTree {
                 }
             }            
         }
+        
+        public synchronized void newDelete(int i)
+        {
+            i = i - 1;
+            OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
+            OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
+            OTree_Node currentNode, newNode, newRoot, neighbor;
+            int w, randomDegree, oldDegree;
+            
+            OTree_Elem[] ithParentChildren = ithParent.getChildren();
+            
+            for(int match = 0; match < ithParentChildren.length; i++)
+            {
+                if(ithLeaf == (OTree_Leaf)ithParentChildren[i])
+                {
+                    ithParent.removeChild(i);
+                    break;
+                }
+            }
+        }
 	
 	/** In order to insert a new node, you must provide data (in the form of
 	 *  a byte array) and a position. You want to insert the value into 
