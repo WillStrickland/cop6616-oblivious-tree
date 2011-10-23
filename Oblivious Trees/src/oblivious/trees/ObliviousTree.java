@@ -557,6 +557,7 @@ public class ObliviousTree {
             
             while(ithParent.getParent() != null)
             {
+                currentNode = ithParent;
                 ithParentChildren = ithParent.getChildren();
                 
                 for(int match = 0; match < ithParentChildren.length; i++)
@@ -577,12 +578,31 @@ public class ObliviousTree {
                 }
                 else
                 {
-                    currentNode = ithParent;
+                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
                     w = 1;
                     
                     while(w > 0)
                     {
+                        neighbor = (OTree_Node)currentNode.getNeighbor();
+                        oldDegree = neighbor.getDegree();
                         
+                        if(w >= oldDegree)
+                        {
+                            OTree_Elem[] neighborChildren = neighbor.getChildren();
+                            
+                            for(int migrate = 0; migrate < neighborChildren.length; migrate++)
+                            {
+                                currentNode.addChild(neighborChildren[i]);
+                                neighborChildren[i].setParent(currentNode);
+                                neighbor.removeChild(0);
+                            }
+                            
+                            w = 0;
+                        }
+                        else
+                        {
+                            
+                        }
                     }
                 }
                 
