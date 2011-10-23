@@ -549,21 +549,47 @@ public class ObliviousTree {
         public synchronized void newDelete(int i)
         {
             i = i - 1;
-            OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
-            OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
+            OTree_Elem ithChild = treeNodes.get(i);
+            OTree_Elem[] ithParentChildren;
+            OTree_Node ithParent = (OTree_Node)ithChild.getParent();
             OTree_Node currentNode, newNode, newRoot, neighbor;
-            int w, randomDegree, oldDegree;
+            int w, randomDegree, oldDegree;                        
             
-            OTree_Elem[] ithParentChildren = ithParent.getChildren();
-            
-            for(int match = 0; match < ithParentChildren.length; i++)
+            while(ithParent.getParent() != null)
             {
-                if(ithLeaf == (OTree_Leaf)ithParentChildren[i])
+                ithParentChildren = ithParent.getChildren();
+                
+                for(int match = 0; match < ithParentChildren.length; i++)
                 {
-                    ithParent.removeChild(i);
-                    break;
+                    if(ithChild == ithParentChildren[i])
+                    {
+                        ithParent.removeChild(i);
+                        break;
+                    }
                 }
+                
+                if(ithParent.getNeighbor() == null)
+                {
+                    if(!(ithParent.getDegree() < 1))
+                    {
+                        
+                    }
+                }
+                else
+                {
+                    currentNode = ithParent;
+                    w = 1;
+                    
+                    while(w > 0)
+                    {
+                        
+                    }
+                }
+                
+                ithChild = ithParent;
+                ithParent = (OTree_Node)ithParent.getParent();
             }
+            
         }
 	
 	/** In order to insert a new node, you must provide data (in the form of
