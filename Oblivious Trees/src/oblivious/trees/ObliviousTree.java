@@ -477,6 +477,23 @@ public class ObliviousTree {
                         
                         if(currentNode.getNeighbor() == null)
                         {
+                            /*
+                             * If you've hit the end of the level and you still
+                             * have nodes accounted for, then you need to create
+                             * a new node and attach any outstanding nodes to 
+                             * it as its children. This effectively increases 
+                             * the 'span' of the level by 1.
+                             */
+                            newNode = new OTree_Node();
+                            currentNode.setNeighbor(newNode);
+                            
+                            for(int migrate = 0; migrate < w; migrate++)
+                            {
+                                newNode.addChild(currentNode.getChild(currentNode.getDegree() - 1));
+                                currentNode.getChild(currentNode.getDegree() - 1).setParent(newNode);
+                                currentNode.removeChild(currentNode.getDegree() - 1);
+                            }
+                            
                             w = 0;
                         }
                         else
@@ -492,6 +509,7 @@ public class ObliviousTree {
                             for(int migrate = 0; migrate < w; migrate++)
                             {
                                 neighbor.addChild(currentNode.getChild(currentNode.getDegree() - 1));
+                                currentNode.getChild(currentNode.getDegree() - 1).setParent(neighbor);
                                 currentNode.removeChild(currentNode.getDegree() - 1);
                             }
 
@@ -506,15 +524,12 @@ public class ObliviousTree {
                              * an extra node floating around. So you have to 
                              * keep going.
                              */                        
-                            w = (oldDegree + w) - randomDegree;
+                            w = java.lang.Math.max(0, ((oldDegree + w) - randomDegree));
                             currentNode = neighbor;                            
-                        }
-                        
-                        
+                        }                                                
                     }
                 }
-            }
-            
+            }            
         }
 	
 	/** In order to insert a new node, you must provide data (in the form of
