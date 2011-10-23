@@ -164,9 +164,20 @@ public class ObliviousTree {
 		generateLeaves(file, signer);
 		//3). Create Oblivious Tree
 		generateTree();
-
 	}
-	
+	public ObliviousTree(byte[] file, Signature signer)
+	{
+		// Initialize crypto stuff
+		initPRNG();
+		initDigest();
+		//1). Instantiate root node
+		root = new OTree_Node();
+		treeNodes = new Vector<OTree_Elem>();
+		//2). Generate leaf nodes from the byte array
+		generateLeaves(file, signer);
+		//3). Create Oblivious Tree
+		generateTree();
+	}
 	// Setup of cryptographic objects - PRNG for randomness and Message Digest for signatures
 	/** Initialize psuedorandom number generator for class if not already initialized.
 	 *  @return true if successful, else false
@@ -247,17 +258,39 @@ public class ObliviousTree {
 	} //*/
 	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
+	 *  @param byte[] file
+	 *  @return void
 	 */
-        
+	private synchronized void generateLeaves(byte[] file, Signature signer){	
+		int this_size=0;
+		// clear current leaves
+		treeNodes.clear();
+		try {
+			// loop until reaches end of file
+			for(int i=0; i<file.length; i+=this_size){
+				OTree_Leaf newLeaf = new OTree_Leaf();
+				this_size = (file.length-i>ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : file.length-i;
+				signer.update(file, 0, this_size);
+				newLeaf.setSig(signer.sign());
+				treeNodes.add(newLeaf);
+			}
+		} catch (Exception e){
+			return;
+		}
+	} //*/
+	
+        /** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
+         *  and, after taking a number between two and three, generate a number of non-leaf, which
+         */
         private synchronized final void create(Signature signer)
         {
-            	int randomDegree;
-		int numOfNodesAtLevel;
-		int nodesAdded = 0;
-		int nodeIndex = 0;
-		int addCount;
-		int traversingLevel;
-		OTree_Node tempNode;
+                int randomDegree;
+                int numOfNodesAtLevel;
+                int nodesAdded = 0;
+                int nodeIndex = 0;
+                int addCount;
+                int traversingLevel;
+                OTree_Node tempNode;
                 
                 /*
                  * Holds the nodes contained at the previous level. It is 
@@ -1031,6 +1064,13 @@ public class ObliviousTree {
 		
 		leaf = (OTree_Leaf)treeNodes.get((i - 1));
 		return leaf;
+	}
+	/** get number of chunks in OTree
+	 * @return int count of leafnodes/chunks in oblivious tree
+	 */
+	public synchronized int getSize(){
+		//return root.getLeafCnt();		// tree version
+		return this.treeNodes.size();	// vector version
 	}
 	
 	/** Update the signature for all the OTree_Elem in list.
