@@ -85,22 +85,22 @@ public class ObliviousTree {
 		tmpNodes.get(2).setParent(tmpNodes.get(3));
 		
 		// set signatures for internal nodes
-		ObliviousTree.updateSigs(tmpNodes, signatures[0]);
+		ObliviousTree.updateSig(tmpNodes, signatures[0]);
 		// internally verify
-		System.out.println("internal verify = "+ObliviousTree.verifySigs(tmpNodes, signatures[1]));
+		System.out.println("internal verify = "+ObliviousTree.verifySig(tmpNodes, signatures[1]));
 		// output signature
-		signOut = test.generateSig();
+		signOut = test.signatureGenerate();
 		// verify signature
-		System.out.println("output verify = "+ObliviousTree.verifySig(testfile, signOut, signatures[1]));
+		System.out.println("output verify = "+ObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
 		// sabotage signature
 		//testfile[54]= (byte) (testfile[54]+1);
 		byte[] sabtmp = tmpNodes.get(0).getSig();
 		sabtmp[5] = (byte) (sabtmp[5]+1);
 		tmpNodes.get(0).setSig(sabtmp);
 		// output signature
-		signOut = test.generateSig();
+		signOut = test.signatureGenerate();
 		// verify signature
-		System.out.println("sabotaged verify = "+ObliviousTree.verifySig(testfile, signOut, signatures[1]));
+		System.out.println("sabotaged verify = "+ObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
 		
 	} //*/
 	
@@ -1040,21 +1040,36 @@ public class ObliviousTree {
 	  * @param signer signature for signing must be initialized for signing
 	  * @return true if successful, false if failure
 	  */
-	private static boolean updateSigs(Collection<OTree_Elem> l, Signature signer){
+	private static boolean updateSig(Collection<OTree_Elem> l, Signature signer){
+		// for node each in collection
+		for (OTree_Elem n : l){
+			// run update on this node
+			// return false if failed
+			if (!updateSig(n,signer)){
+				return false;
+			}
+		}
+		// return true if all succeed
+		return true;
+	}
+	/** Update the signature for a single OTree_Elem.
+	  * Method designed to operate only on internal nodes.
+	  * @param n OTree_Elem (that has children)
+	  * @param signer signature for signing must be initialized for signing
+	  * @return true if successful, false if failure
+	  */
+	private static boolean updateSig(OTree_Elem n, Signature signer){
 		try {
-			// for node each in collection
-			for (OTree_Elem n : l){
-				// get children set
-				OTree_Elem[] C = n.getChildren();
-				// if has children
-				if (C != null && C.length>0){
-					// compile signature from children from left to right. 
-					for (OTree_Elem c : C){
-						signer.update(c.getSig());
-					}
-					// finish signature computation at set into this node
-					n.setSig(signer.sign());
+			// get children set
+			OTree_Elem[] C = n.getChildren();
+			// if has children
+			if (C != null && C.length>0){
+				// compile signature from children from left to right. 
+				for (OTree_Elem c : C){
+					signer.update(c.getSig());
 				}
+				// finish signature computation at set into this node
+				n.setSig(signer.sign());
 			}
 			return true;
 		} catch (SignatureException e) {
@@ -1068,29 +1083,39 @@ public class ObliviousTree {
 	  * @param verifier signature for verification must be initialized for verification
 	  * @return true if successful, false if failure
 	  */
-	private static boolean verifySigs(Collection<OTree_Elem> l, Signature verifier){
-		boolean rtn = true;
-		try {
-			// for node each in collection
-			for (OTree_Elem n : l){
-				// get children set
-				OTree_Elem[] C = n.getChildren();
-				// if has children
-				if (C != null && C.length>0){
-					// compile data from children from left to right. 
-					for (OTree_Elem c : C){
-						verifier.update(c.getSig());
-					}
-					// finish verification
-					 rtn = verifier.verify(n.getSig());
-					// if verification fail, exit for each
-					if (rtn==false){
-						break;
-					}
-				}
+	private static boolean verifySig(Collection<OTree_Elem> l, Signature verifier){
+		// for node each in collection
+		for (OTree_Elem n : l){
+			// run update on this node
+			// return false if verify failed
+			if (!verifySig(n,verifier)){
+				return false;
 			}
-			// return the result of verification
-			return rtn;
+		}
+		// return true if all succeed
+		return true;
+	}
+	/** Verify the signature for a single OTree_Elem.
+	  * Method designed to operate only on internal nodes.
+	  * @param n OTree_Elem to be verified
+	  * @param verifier signature for verification must be initialized for verification
+	  * @return true if successful, false if failure
+	  */
+	private static boolean verifySig(OTree_Elem n, Signature verifier){
+		try {
+			// get children set
+			OTree_Elem[] C = n.getChildren();
+			// if has children
+			if (C != null && C.length>0){
+				// compile data from children from left to right. 
+				for (OTree_Elem c : C){
+					verifier.update(c.getSig());
+				}
+				// finish verification and return result
+				return verifier.verify(n.getSig());
+			} else {
+				return true;
+			}
 		} catch (SignatureException e) {
 			return false;
 		}
@@ -1146,10 +1171,10 @@ public class ObliviousTree {
 	 * outputs each node in signature as {sig_size}{sig}{degree} in depth-first preorder
 	 *  @return byte[] of current complete signature, null if failure
 	 */
-	public synchronized byte[] generateSig(){
+	public synchronized byte[] signatureGenerate(){
 		// Initialize output holder; index at 0, initial size of 128 bytes
 		ObliviousTree.SignatureArray sig = new ObliviousTree.SignatureArray(0, 128);
-		ObliviousTree.generateSigRecurse(this.root, sig);
+		ObliviousTree.signatureGenerateRecurse(this.root, sig);
 		// return truncated array of just signatures
 		return Arrays.copyOf(sig.data, sig.index);
 	} //*/
@@ -1157,7 +1182,7 @@ public class ObliviousTree {
 	 *  @param thisNode current node
 	 *  @param sig SignatureArray object holding current state
 	 */
-	private static void generateSigRecurse(OTree_Elem thisNode, ObliviousTree.SignatureArray sig){
+	private static void signatureGenerateRecurse(OTree_Elem thisNode, ObliviousTree.SignatureArray sig){
 		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
 		byte[] tmp;	// temporary array for holding byte rep of each node
 		
@@ -1189,7 +1214,7 @@ public class ObliviousTree {
 		// call for each child (left to right)
 		if(thisNode.getDegree()>0){
 			for (OTree_Elem c : Arrays.asList(thisNode.getChildren())){
-				generateSigRecurse(c, sig);
+				signatureGenerateRecurse(c, sig);
 			}	
 		}
 		
@@ -1219,7 +1244,7 @@ public class ObliviousTree {
 	 *  @param verifier Signature to verify tree and file with
 	 *  @return true if valid, false if invalid
 	 */
-	public static boolean verifySig(byte[] file, byte[] sig, Signature verifier){
+	public static boolean signatureVerify(byte[] file, byte[] sig, Signature verifier){
 		// construct SignatureArrays from file and signature input
 		ObliviousTree.SignatureArray fileArray = new ObliviousTree.SignatureArray(0, 5);
 		ObliviousTree.SignatureArray sigArray = new ObliviousTree.SignatureArray();
@@ -1227,7 +1252,7 @@ public class ObliviousTree {
 		sigArray.data = sig;
 		try{
 			// try and verify the file using signature file and verifier
-			verifySigRecurse(fileArray, sigArray, verifier);
+			signatureVerifyRecurse(fileArray, sigArray, verifier);
 		} catch (GeneralSecurityException e){
 			return false;
 		}
@@ -1237,7 +1262,7 @@ public class ObliviousTree {
 	 *  @return byte[] signature data for parent calculation
 	 *  @throws GeneralSecurityException when signature verification fails (I know this is terrible...)
 	 */
-	private static byte[] verifySigRecurse(ObliviousTree.SignatureArray file, ObliviousTree.SignatureArray sig, Signature verifier) throws GeneralSecurityException{
+	private static byte[] signatureVerifyRecurse(ObliviousTree.SignatureArray file, ObliviousTree.SignatureArray sig, Signature verifier) throws GeneralSecurityException{
 		int sig_size, degree; // signature size and node degree to be read from input
 		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
 		byte[] tmp;		// temporary array for holding byte sig of each node
@@ -1263,7 +1288,7 @@ public class ObliviousTree {
 			// gather children signatures
 			for (int j=0; j<degree; j++){
 				// concatenate child segments together
-				data = concatArrays(data, verifySigRecurse(file, sig, verifier));
+				data = concatArrays(data, signatureVerifyRecurse(file, sig, verifier));
 			}
 		}
 		// verify against file
