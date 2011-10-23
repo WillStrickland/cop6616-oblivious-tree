@@ -458,6 +458,17 @@ public class ObliviousTree {
 		root = (OTree_Node)treeNodes.get(nodeIndex);
 	}
         
+        /**
+         * 
+         * @param byte[] value
+         * @param int i
+         * @param Signature signer
+         * @return void
+         * 
+         * Inserts a new leaf into the ith position of the leaf level, then
+         * re-randomized the tree based on the optimized insert algorithm
+         * presented.
+         */
         public synchronized void newInsert(byte[] value, int i, Signature signer)
         {
             i = i - 1;
@@ -606,16 +617,16 @@ public class ObliviousTree {
                 {
                     if(!(ithParent.getDegree() < 1))
                     {
-                        
+                        root = (OTree_Node)ithParent.getChild(0);
                     }
                 }
                 else
-                {
-                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                {                    
                     w = 1;
                     
                     while(w > 0)
                     {
+                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
                         neighbor = (OTree_Node)currentNode.getNeighbor();
                         oldDegree = neighbor.getDegree();
                         
@@ -634,7 +645,14 @@ public class ObliviousTree {
                         }
                         else
                         {
+                            for(int migrate = 0; migrate < w; migrate++)
+                            {
+                                currentNode.addChild(neighbor.getChild(0));
+                                neighbor.getChild(0).setParent(currentNode);
+                                neighbor.removeChild(0);
+                            }
                             
+                            w = randomDegree - oldDegree + w;
                         }
                     }
                 }
