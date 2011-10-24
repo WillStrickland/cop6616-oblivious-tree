@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Signature;
 
-import oblivious.trees.ObliviousTree;
+import oblivious.sequential.ObliviousTree;
 
 @SuppressWarnings("unused")
 public class TestApplication {
