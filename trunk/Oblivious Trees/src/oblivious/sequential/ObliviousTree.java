@@ -12,6 +12,7 @@ import java.security.SignatureException;
 import java.util.NoSuchElementException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Random;
 import java.util.Vector;
 
 /** Oblivious Tree - COP 6616
@@ -134,7 +135,7 @@ public class ObliviousTree {
 	 */
 	
 	/* Class Properties */
-	private static SecureRandom rndSrc;			// Random source for creating obliviousness
+	private static Random rndSrc;				// Random source for creating obliviousness
 	private static MessageDigest digest;		// Secure hashing function for leaves
 	public final static int CHUNK_SIZE = 100;	// File chunk size in bytes
 	
@@ -197,7 +198,13 @@ public class ObliviousTree {
 	 */
 	public static String PRNG_Info(){
 		if (rndSrc != null){
-			return rndSrc.getAlgorithm()+ " - " + rndSrc.getProvider().toString();
+			String txt;
+			try {
+				txt = " - " + ((SecureRandom) rndSrc).getAlgorithm() + " - " + ((SecureRandom) rndSrc).getProvider().toString();
+			} catch (ClassCastException e){
+				txt = "";
+			}
+			return rndSrc.getClass().getName() + txt;
 		} else {
 			return "PRNG not initialized!";
 		}
