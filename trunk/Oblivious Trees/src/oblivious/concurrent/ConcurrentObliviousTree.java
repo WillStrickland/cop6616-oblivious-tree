@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Signature;
@@ -21,7 +20,7 @@ import java.util.Vector;
  */
 public class ConcurrentObliviousTree {
 
-	//
+	// main testing method
 	public static void main(String[] args) {
 		System.out.println("Hello, World!!!");
 		/*System.out.println("chunkSize = "+ObliviousTree.CHUNK_SIZE);
@@ -45,9 +44,10 @@ public class ConcurrentObliviousTree {
 		Signature[] signatures = initSignature();	
 		byte[] testfile = new byte[550];
 		byte[] signOut;
+		Random this_rnd = ConcurrentObliviousTree.rndSrc.get();
 		ConcurrentObliviousTree test = new ConcurrentObliviousTree();
 		test.treeNodes = new Vector<OTree_Elem>();
-		ConcurrentObliviousTree.rndSrc.nextBytes(testfile);
+		this_rnd.nextBytes(testfile);
 		Vector<OTree_Elem> tmpNodes = new Vector<OTree_Elem>();
 		// parse out file chunk signatures to each node
 		int i=0;
@@ -103,9 +103,77 @@ public class ConcurrentObliviousTree {
 		System.out.println("sabotaged verify = "+ConcurrentObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
 	} //*/
 	
+	/* Class Properties */
+	// File chunk size in bytes
+	public static final int CHUNK_SIZE = 100;	
+	// Random source for creating obliviousness
+	private static final ThreadLocal<Random> rndSrc = 
+			new ThreadLocal <Random> () {
+				@Override protected Random initialValue() {
+					return ConcurrentObliviousTree.initPRNG();
+				}
+			};
+	
+	/* Instance Properties */
+	private OTree_Node root;	// root node of tree
+	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
+	
+	/** Constructor generates empty initial tree.
+	 */
+	public ConcurrentObliviousTree(){
+		root = new OTree_Node();
+	}
+	/** Constructor generates initial leaf node using using a given input file.
+	 */
+	public ConcurrentObliviousTree(FileInputStream file, Signature signer){
+		//1). Instantiate root node
+		root = new OTree_Node();
+		treeNodes = new Vector<OTree_Elem>();
+		//2). Create Oblivious Tree
+		create(generateLeaves(file, signer),signer);
+	}
+	/** Constructor generates initial leaf node using using a given input byte array.
+	 */
+	public ConcurrentObliviousTree(byte[] file, Signature signer){
+		//1). Instantiate root node
+		root = new OTree_Node();
+		treeNodes = new Vector<OTree_Elem>();
+		//2). Create Oblivious Tree
+		create(generateLeaves(file, signer),signer);
+	}
+	
+	/** Initialize psuedorandom number generator for class if not already initialized.
+	 *  @return new PRNG, null if failure
+	 */
+	private static Random initPRNG(){	
+		try {
+			Random tmpRnd = SecureRandom.getInstance("SHA1PRNG");
+			byte[] b = new byte[1];
+			tmpRnd.nextBytes(b);
+			return tmpRnd;
+		} catch (NoSuchAlgorithmException e){
+			return null;
+		}
+	}
+	/** Get information about psuedorandom number generator used.
+	 *  @return String describing psuedorandom number generator algorithm
+	 */
+	public static String PRNG_Info(){
+		Random this_rnd = rndSrc.get();
+		if (this_rnd != null){
+			String txt;
+			try {
+				txt = " - " + ((SecureRandom) this_rnd).getAlgorithm() + " - " + ((SecureRandom) this_rnd).getProvider().toString();
+			} catch (ClassCastException e){
+				txt = "";
+			}
+			return this_rnd.getClass().getName() + txt;
+		} else {
+			return "PRNG not initialized!";
+		}
+	}
 	/** Generates a public-private key pair at random and
 	 *  returns a signature for signing and another for verifying
-	 * 
 	 *  @return Signature[] index 0 = signing, index 1 = verifying
 	 */
 	private static Signature[] initSignature(){
@@ -128,120 +196,16 @@ public class ConcurrentObliviousTree {
 		return sig;
 	}
 	
-	/**
-	 * Constructor generates initial leaf node using
-	 * using a given input file.
-	 *
-	 */
-	
-	/* Class Properties */
-	private static Random rndSrc;				// Random source for creating obliviousness
-	private static MessageDigest digest;		// Secure hashing function for leaves
-	public final static int CHUNK_SIZE = 100;	// File chunk size in bytes
-	
-	/* Instance Properties */
-	private OTree_Node root;	// root node of tree
-	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
-
-	
-	public ConcurrentObliviousTree(){
-		// Initialize crypto stuff
-		initPRNG();
-		initDigest();
-		root = new OTree_Node();
-	}
-	
-	public ConcurrentObliviousTree(FileInputStream file, Signature signer)
-	{
-		// Initialize crypto stuff
-		initPRNG();
-		initDigest();
-		//1). Instantiate root node
-		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
-		//2). Generate leaf nodes from the byte array
-		generateLeaves(file, signer);
-		//3). Create Oblivious Tree
-		generateTree();
-	}
-	public ConcurrentObliviousTree(byte[] file, Signature signer)
-	{
-		// Initialize crypto stuff
-		initPRNG();
-		initDigest();
-		//1). Instantiate root node
-		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
-		//2). Generate leaf nodes from the byte array
-		generateLeaves(file, signer);
-		//3). Create Oblivious Tree
-		generateTree();
-	}
-	// Setup of cryptographic objects - PRNG for randomness and Message Digest for signatures
-	/** Initialize psuedorandom number generator for class if not already initialized.
-	 *  @return true if successful, else false
-	 */
-	private static boolean initPRNG(){	
-		if (rndSrc==null){
-			try {
-				rndSrc = SecureRandom.getInstance("SHA1PRNG");
-				byte[] b = new byte[1];
-				rndSrc.nextBytes(b);
-			} catch (NoSuchAlgorithmException e){
-				return false;
-			}
-		}
-		return true;
-	}
-	/** Get information about psuedorandom number generator used.
-	 *  @return String describing psuedorandom number generator algorithm
-	 */
-	public static String PRNG_Info(){
-		if (rndSrc != null){
-			String txt;
-			try {
-				txt = " - " + ((SecureRandom) rndSrc).getAlgorithm() + " - " + ((SecureRandom) rndSrc).getProvider().toString();
-			} catch (ClassCastException e){
-				txt = "";
-			}
-			return rndSrc.getClass().getName() + txt;
-		} else {
-			return "PRNG not initialized!";
-		}
-	}
-	/** Initialize message digest for class if not already initialized.
-	 *  @return true if successful, else false
-	 */
-	private static boolean initDigest(){	
-		if (digest==null){
-			try {
-				digest = MessageDigest.getInstance("SHA-1");
-			} catch (NoSuchAlgorithmException e){
-				return false;
-			}
-		}
-		return true;
-	}
-	/** Get information about message digest used.
-	 *  @return String describing message digest algorithm
-	 */
-	public static String Digest_Info(){
-		if (digest != null){
-			return digest.getAlgorithm()+ " - " + digest.getProvider().toString();
-		} else {
-			return "Digest not initialized!";
-		}
-	}
-	
 	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
-	 *  @param byte[] file
-	 *  @return void
+	 *  @param file file to be put signed in leaves
+	 *  @param signer signature to be used for signing leaves
+	 *  @return list of leaves created
 	 */
-	private synchronized void generateLeaves(FileInputStream file, Signature signer){	
+	private synchronized Vector<OTree_Elem> generateLeaves(FileInputStream file, Signature signer){
 		int this_size;
+		Vector<OTree_Elem> tmp = new Vector<OTree_Elem>();
 		byte[] chunk = new byte[ConcurrentObliviousTree.CHUNK_SIZE];
-		treeNodes.clear();
 		try {
 			// loop until reaches end of file
 			while(true){
@@ -249,7 +213,7 @@ public class ConcurrentObliviousTree {
 				OTree_Leaf newLeaf = new OTree_Leaf();
 				signer.update(chunk, 0, this_size);
 				newLeaf.setSig(signer.sign());
-				treeNodes.add(newLeaf);
+				tmp.add(newLeaf);
 				
 				// if less than whole chunk, reached end of file
 				if (this_size < ConcurrentObliviousTree.CHUNK_SIZE){
@@ -257,19 +221,21 @@ public class ConcurrentObliviousTree {
 					break;
 				}
 			}
+			return tmp;
 		} catch (Exception e){
-			return;
+			return null;
 		}
 	} //*/
 	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
-	 *  @param byte[] file
-	 *  @return void
+	 *  @param file byte array to be put signed in leaves
+	 *  @param signer signature to be used for signing leaves
+	 *  @return list of leaves created
 	 */
-	private synchronized void generateLeaves(byte[] file, Signature signer){	
+	private synchronized Vector<OTree_Elem> generateLeaves(byte[] file, Signature signer){
 		int this_size=0;
+		Vector<OTree_Elem> tmp = new Vector<OTree_Elem>();
 		// clear current leaves
-		treeNodes.clear();
 		try {
 			// loop until reaches end of file
 			for(int i=0; i<file.length; i+=this_size){
@@ -277,18 +243,20 @@ public class ConcurrentObliviousTree {
 				this_size = (file.length-i>ConcurrentObliviousTree.CHUNK_SIZE) ? ConcurrentObliviousTree.CHUNK_SIZE : file.length-i;
 				signer.update(file, 0, this_size);
 				newLeaf.setSig(signer.sign());
-				treeNodes.add(newLeaf);
+				tmp.add(newLeaf);
 			}
+			return tmp;
 		} catch (Exception e){
-			return;
+			return null;
 		}
 	} //*/
 	
         /** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
          *  and, after taking a number between two and three, generate a number of non-leaf, which
          */
-        private synchronized final void create(Signature signer)
+        private synchronized final void create(Vector<OTree_Elem> leaves, Signature signer)
         {
+                Random this_rnd = rndSrc.get();
                 int randomDegree;
                 int numOfNodesAtLevel;
                 int nodesAdded = 0;
@@ -301,7 +269,7 @@ public class ConcurrentObliviousTree {
                  * Holds the nodes contained at the previous level. It is 
                  * instantiated with the nodes at the leaf level
                  */
-                Vector<OTree_Elem> previousLevel = treeNodes;
+                Vector<OTree_Elem> previousLevel = leaves;
                 /*
                  * Holds the nodes being added to the current level.
                  */
@@ -314,7 +282,7 @@ public class ConcurrentObliviousTree {
                     
                     for(addCount = 0; addCount < numOfNodesAtLevel; addCount += randomDegree)
                     {
-                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                        randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
                         randomDegree = (((addCount + randomDegree) + 1) > numOfNodesAtLevel) ? ((addCount + randomDegree) + 1) - numOfNodesAtLevel : randomDegree;
                         tempNode = new OTree_Node();
                         
@@ -362,106 +330,6 @@ public class ConcurrentObliviousTree {
                 {                    
                 }
         }
-	private synchronized void generateTree()
-	{		
-		int randomDegree;
-		//The initial level will be the leaves that were added using the
-		//generateLeaves function
-		int numOfNodesAtLevel = treeNodes.size();
-		//This keeps track of how many nodes we add to a particular level
-		int nodesAdded = 0;
-		//We traverse through the Vector using nodeIndex, which is iterated
-		//whenever we add a child to a parent node.
-		int nodeIndex = 0;
-		//Keeps track of how many children we attach to a node at a higher
-		//level
-		int addCount;
-		//A counter to traverse through a level from left to right.
-		int traversingLevel;
-		OTree_Node treeNode;
-		
-		//Generate the initial uniform random degree
-		if(rndSrc.nextBoolean())
-		{
-			randomDegree = 2;
-		}
-		else
-		{
-			randomDegree = 3;
-		}
-		
-		//If the number of nodes added to the previous level is 1,
-		//then that means we've hit the limit and the loop needs
-		//to break. That 1 node added will be the root.
-		while(nodesAdded != 1)
-		{
-			//Reset the counter which keeps track of how many nodes were
-			//added to the previous level.
-			nodesAdded = 0;
-			
-			//We traverse the previous level by iterating through the nodes 
-			//we added. We increment this by the randomDegree value, which
-			//dictates how many children we attach to a parent.
-			for(traversingLevel = 0; traversingLevel < numOfNodesAtLevel; traversingLevel += randomDegree)
-			{
-				treeNode = new OTree_Node();
-				
-				//We take the current number of nodes we traversed through
-				//and increment it by the randomDegree like in the for loop.
-				//If this exceeds the number of node at that level, then 
-				//we set the degree to however many nodes at left. 
-				//traversingLevel is 0-aligned, so we add 1 to compensate			
-				if(((traversingLevel + randomDegree) + 1) > numOfNodesAtLevel)
-				{
-					//We take the difference between the excess number of 
-					//nodes and how many nodes are actually left at that
-					//level. This becomes the new randomDegree.
-					randomDegree = ((traversingLevel + randomDegree) + 1) - numOfNodesAtLevel;
-				}
-				
-				//We set the number of nodes we will be attaching to a 
-				//parent by the degree.
-				addCount = randomDegree;
-				
-				while(addCount > 0)
-				{
-					//Using the nodeIndex to grab the next node and set its
-					//parent to the current node. We then add those nodes
-					//to the children of the current node.
-					treeNodes.get(nodeIndex).setParent(treeNode);
-					treeNode.addChild(treeNodes.get(nodeIndex));
-					
-					//Iterate nodeIndex for every node we 'eat'
-					nodeIndex++;		 
-					addCount--;
-				}
-				
-				//Add the new node to the Vector
-				treeNodes.add(treeNode);
-				//Keep track of each node we add this way
-				nodesAdded++;
-				
-				//Generate the next randomDegree
-				if(rndSrc.nextBoolean())
-				{
-					randomDegree = 2;
-				}
-				else
-				{
-					randomDegree = 3;
-				}
-				
-			}
-			
-			//The number of of nodes at the level we just created to the 
-			//number of nodes we added to the Vector
-			numOfNodesAtLevel = nodesAdded;
-		}
-		
-		//Set the root after the loop breaks to finish off
-		//the tree.
-		root = (OTree_Node)treeNodes.get(nodeIndex);
-	}
         
         /**
          * 
@@ -476,6 +344,7 @@ public class ConcurrentObliviousTree {
          */
         public synchronized void newInsert(byte[] value, int i, Signature signer)
         {
+            Random this_rnd = rndSrc.get();
             i = i - 1;
             OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
             OTree_Leaf newLeaf = new OTree_Leaf();
@@ -488,7 +357,7 @@ public class ConcurrentObliviousTree {
             newLeaf.setParent(ithParent);
             treeNodes.add(i, newLeaf);
             
-            randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+            randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
             
             /*
              * The algorithm keeps going up level by level until we pass the
@@ -528,7 +397,7 @@ public class ConcurrentObliviousTree {
                          * from the leaf to the root.
                          */
                     }
-
+                    
                 }
                 else
                 {
@@ -536,7 +405,7 @@ public class ConcurrentObliviousTree {
                     
                     while(w > 0)
                     {
-                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                        randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
                         
                         if(randomDegree == w || currentNode.getNeighbor() == null)
                         {
@@ -575,7 +444,7 @@ public class ConcurrentObliviousTree {
                                 currentNode.getChild(currentNode.getDegree() - 1).setParent(neighbor);
                                 currentNode.removeChild(currentNode.getDegree() - 1);
                             }
-
+                            
                             /*
                              * Take the original degree of the node, add however
                              * many nodes you added to it, and subtract it by 
@@ -597,6 +466,7 @@ public class ConcurrentObliviousTree {
         
         public synchronized void newDelete(int i)
         {
+            Random this_rnd = rndSrc.get();
             i = i - 1;
             OTree_Elem ithChild = treeNodes.get(i);
             OTree_Elem[] ithParentChildren;
@@ -631,7 +501,7 @@ public class ConcurrentObliviousTree {
                     
                     while(w > 0)
                     {
-                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                        randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
                         neighbor = (OTree_Node)currentNode.getNeighbor();
                         oldDegree = neighbor.getDegree();
                         
@@ -678,26 +548,27 @@ public class ConcurrentObliviousTree {
 	 */
 	public synchronized void insert(byte[] value, int i, Signature signer)
 	{
-		/*
-		 * Create a new leaf node based on the new data
-		 */
-		int w, randomDegree, level = 0, childRemoveCount;
-		int maxLeaves = treeNodes.size();
-		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
-		OTree_Leaf newLeaf = new OTree_Leaf();
-		newLeaf.setSig(value);
-		/*
-		 * Fetch the current ith (zero-aligned) leaf node
-		 */
-		OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
-		/*
-		 * Get the parent of the current ith node
-		 */
-		parent = ithParent = (OTree_Node)iThLeaf.getParent();
-		/*
-		 * Insert the new ith node into the ith (zero-aligned) position
-		 */
-		treeNodes.add((i-1), newLeaf);
+                Random this_rnd = rndSrc.get();
+                /*
+                 * Create a new leaf node based on the new data
+                 */
+                int w, randomDegree, level = 0, childRemoveCount;
+                int maxLeaves = treeNodes.size();
+                OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
+                OTree_Leaf newLeaf = new OTree_Leaf();
+                newLeaf.setSig(value);
+                /*
+                 * Fetch the current ith (zero-aligned) leaf node
+                 */
+                OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
+                /*
+                 * Get the parent of the current ith node
+                 */
+                parent = ithParent = (OTree_Node)iThLeaf.getParent();
+                /*
+                 * Insert the new ith node into the ith (zero-aligned) position
+                 */
+                treeNodes.add((i-1), newLeaf);
 
                 /*
                  * Figure out what our level is by traversing the tree up to the
@@ -710,7 +581,7 @@ public class ConcurrentObliviousTree {
                     level++;
                 }
                 
-                if(rndSrc.nextBoolean())
+                if(this_rnd.nextBoolean())
                 {
                         randomDegree = 2;
                 }
@@ -757,7 +628,7 @@ public class ConcurrentObliviousTree {
                              */
                             ithTemp = ithParent;
                             
-                            if(rndSrc.nextBoolean())
+                            if(this_rnd.nextBoolean())
                             {
                                     randomDegree = 2;
                             }
@@ -792,9 +663,9 @@ public class ConcurrentObliviousTree {
                                         {
                                             OTree_Node newChild = new OTree_Node();
                                             parent.addChild(newChild);
-
+                                            
                                             childRemoveCount = 0;
-
+                                            
                                             while(childRemoveCount < w)
                                             {
                                                 newChild.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
@@ -808,7 +679,7 @@ public class ConcurrentObliviousTree {
                                         {
                                             parent = (OTree_Node)parent.getParent();
                                         }
-                                    }                                                                        
+                                    }
                                 }
                                 
                                 w = 0;
@@ -819,7 +690,7 @@ public class ConcurrentObliviousTree {
                                 int t = ithTemp.getDegree();
                                 
                                 childRemoveCount = 0;
-
+                                
                                 while(childRemoveCount < w)
                                 {
                                     ithTemp.addChild(ithParent.getChild(ithParent.getDegree() - 1));
@@ -840,28 +711,29 @@ public class ConcurrentObliviousTree {
                     ithParent = (OTree_Node)ithParent.getParent();
                     level--;
                 }
-	}
+        }
 	//
         
         public synchronized void delete(int i, Signature signer)
-	{
-                /*
-		 * Create a new leaf node based on the new data
-		 */
-		int w, randomDegree, level = 0, childRemoveCount, t;
-		int maxLeaves = treeNodes.size();
-		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
+         {
+            Random this_rnd = rndSrc.get();
+            /*
+                 * Create a new leaf node based on the new data
+                 */
+                int w, randomDegree, level = 0, childRemoveCount, t;
+                int maxLeaves = treeNodes.size();
+                OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
                 OTree_Elem[] children;
                 
                 /*
-		 * Fetch the current ith (zero-aligned) leaf node
-		 */
-		OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
-		/*
-		 * Get the children of the parent of the ith leaf, so we can 
+                 * Fetch the current ith (zero-aligned) leaf node
+                 */
+                OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
+                /*
+                 * Get the children of the parent of the ith leaf, so we can 
                  * delete the given child before removing it from the Vector
-		 */
-		children = iThLeaf.getParent().getChildren();
+                 */
+                children = iThLeaf.getParent().getChildren();
                 ithParent = parent =(OTree_Node)iThLeaf.getParent();
                 
                 while(parent != null)
@@ -878,7 +750,7 @@ public class ConcurrentObliviousTree {
                         break;
                     }
                 }
-	
+                
                 treeNodes.removeElementAt(i);
                 
                 while(ithParent !=  null)
@@ -910,7 +782,7 @@ public class ConcurrentObliviousTree {
                         {
                             ithTemp = ithParent;
                             
-                            if(rndSrc.nextBoolean())
+                            if(this_rnd.nextBoolean())
                             {
                                 randomDegree = 2;
                             }
@@ -936,8 +808,8 @@ public class ConcurrentObliviousTree {
                                 
                             }
                             else
-                            {                                                            
-                                if(rndSrc.nextBoolean())
+                            {
+                                if(this_rnd.nextBoolean())
                                 {
                                     randomDegree = 2;
                                 }
@@ -947,7 +819,7 @@ public class ConcurrentObliviousTree {
                                 }
                                 
                                 childRemoveCount = 0;
-
+                                
                                 while(childRemoveCount < w)
                                 {
                                     ithParent.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
