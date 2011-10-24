@@ -3,7 +3,7 @@ package oblivious.sequential;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class OTree_Leaf extends OTree_Elem{
+class OTree_Leaf extends OTree_Elem{
 	
 	// Instance Variable
 	/* NONE */
