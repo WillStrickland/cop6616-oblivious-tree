@@ -83,7 +83,6 @@ public class ObliviousTree {
 		tmpNodes.get(1).setParent(tmpNodes.get(3));
 		tmpNodes.get(3).addChild(tmpNodes.get(2));
 		tmpNodes.get(2).setParent(tmpNodes.get(3));
-		
 		// set signatures for internal nodes
 		ObliviousTree.updateSig(tmpNodes, signatures[0]);
 		// internally verify
@@ -101,7 +100,6 @@ public class ObliviousTree {
 		signOut = test.signatureGenerate();
 		// verify signature
 		System.out.println("sabotaged verify = "+ObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
-		
 	} //*/
 	
 	/** Generates a public-private key pair at random and
