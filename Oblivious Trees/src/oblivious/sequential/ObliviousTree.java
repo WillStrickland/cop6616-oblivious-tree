@@ -162,7 +162,7 @@ public class ObliviousTree {
 		//2). Generate leaf nodes from the byte array
 		generateLeaves(file, signer);
 		//3). Create Oblivious Tree
-		generateTree();
+		create(signer);
 	}
 	public ObliviousTree(byte[] file, Signature signer)
 	{
@@ -175,7 +175,7 @@ public class ObliviousTree {
 		//2). Generate leaf nodes from the byte array
 		generateLeaves(file, signer);
 		//3). Create Oblivious Tree
-		generateTree();
+		create(signer);
 	}
 	// Setup of cryptographic objects - PRNG for randomness and Message Digest for signatures
 	/** Initialize psuedorandom number generator for class if not already initialized.
