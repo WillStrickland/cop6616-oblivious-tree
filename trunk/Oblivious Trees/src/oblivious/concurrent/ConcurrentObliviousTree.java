@@ -18,7 +18,7 @@ import java.util.Vector;
  * @author William Strickland and Chris Fontaine
  * @version Sequential Implementation
  */
-public class ObliviousTree {
+public class ConcurrentObliviousTree {
 
 	//
 	public static void main(String[] args) {
@@ -32,7 +32,7 @@ public class ObliviousTree {
 		System.out.println("PRNG = "+ObliviousTree.PRNG_Info());
 		System.out.println("DIGEST = "+ObliviousTree.Digest_Info());
 		//*/
-		ObliviousTree.testVerify();
+		ConcurrentObliviousTree.testVerify();
 		
 	} //*/
 	
@@ -44,15 +44,15 @@ public class ObliviousTree {
 		Signature[] signatures = initSignature();	
 		byte[] testfile = new byte[550];
 		byte[] signOut;
-		ObliviousTree test = new ObliviousTree();
+		ConcurrentObliviousTree test = new ConcurrentObliviousTree();
 		test.treeNodes = new Vector<OTree_Elem>();
-		ObliviousTree.rndSrc.nextBytes(testfile);
+		ConcurrentObliviousTree.rndSrc.nextBytes(testfile);
 		Vector<OTree_Elem> tmpNodes = new Vector<OTree_Elem>();
 		// parse out file chunk signatures to each node
 		int i=0;
 		while(i<testfile.length){
 			OTree_Leaf tmp = new OTree_Leaf();
-			int this_chunk = (testfile.length-i>ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : testfile.length-i ;
+			int this_chunk = (testfile.length-i>ConcurrentObliviousTree.CHUNK_SIZE) ? ConcurrentObliviousTree.CHUNK_SIZE : testfile.length-i ;
 			try {
 				signatures[0].update(testfile, i, this_chunk);
 				tmp.setSig(signatures[0].sign());
@@ -84,13 +84,13 @@ public class ObliviousTree {
 		tmpNodes.get(3).addChild(tmpNodes.get(2));
 		tmpNodes.get(2).setParent(tmpNodes.get(3));
 		// set signatures for internal nodes
-		ObliviousTree.updateSig(tmpNodes, signatures[0]);
+		ConcurrentObliviousTree.updateSig(tmpNodes, signatures[0]);
 		// internally verify
-		System.out.println("internal verify = "+ObliviousTree.verifySig(tmpNodes, signatures[1]));
+		System.out.println("internal verify = "+ConcurrentObliviousTree.verifySig(tmpNodes, signatures[1]));
 		// output signature
 		signOut = test.signatureGenerate();
 		// verify signature
-		System.out.println("output verify = "+ObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
+		System.out.println("output verify = "+ConcurrentObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
 		// sabotage signature
 		//testfile[54]= (byte) (testfile[54]+1);
 		byte[] sabtmp = tmpNodes.get(0).getSig();
@@ -99,7 +99,7 @@ public class ObliviousTree {
 		// output signature
 		signOut = test.signatureGenerate();
 		// verify signature
-		System.out.println("sabotaged verify = "+ObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
+		System.out.println("sabotaged verify = "+ConcurrentObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
 	} //*/
 	
 	/** Generates a public-private key pair at random and
@@ -143,14 +143,14 @@ public class ObliviousTree {
 	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
 
 	
-	public ObliviousTree(){
+	public ConcurrentObliviousTree(){
 		// Initialize crypto stuff
 		initPRNG();
 		initDigest();
 		root = new OTree_Node();
 	}
 	
-	public ObliviousTree(FileInputStream file, Signature signer)
+	public ConcurrentObliviousTree(FileInputStream file, Signature signer)
 	{
 		// Initialize crypto stuff
 		initPRNG();
@@ -163,7 +163,7 @@ public class ObliviousTree {
 		//3). Create Oblivious Tree
 		generateTree();
 	}
-	public ObliviousTree(byte[] file, Signature signer)
+	public ConcurrentObliviousTree(byte[] file, Signature signer)
 	{
 		// Initialize crypto stuff
 		initPRNG();
@@ -233,7 +233,7 @@ public class ObliviousTree {
 	 */
 	private synchronized void generateLeaves(FileInputStream file, Signature signer){	
 		int this_size;
-		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
+		byte[] chunk = new byte[ConcurrentObliviousTree.CHUNK_SIZE];
 		treeNodes.clear();
 		try {
 			// loop until reaches end of file
@@ -245,7 +245,7 @@ public class ObliviousTree {
 				treeNodes.add(newLeaf);
 				
 				// if less than whole chunk, reached end of file
-				if (this_size < ObliviousTree.CHUNK_SIZE){
+				if (this_size < ConcurrentObliviousTree.CHUNK_SIZE){
 					// break out of loop
 					break;
 				}
@@ -267,7 +267,7 @@ public class ObliviousTree {
 			// loop until reaches end of file
 			for(int i=0; i<file.length; i+=this_size){
 				OTree_Leaf newLeaf = new OTree_Leaf();
-				this_size = (file.length-i>ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : file.length-i;
+				this_size = (file.length-i>ConcurrentObliviousTree.CHUNK_SIZE) ? ConcurrentObliviousTree.CHUNK_SIZE : file.length-i;
 				signer.update(file, 0, this_size);
 				newLeaf.setSig(signer.sign());
 				treeNodes.add(newLeaf);
@@ -1229,8 +1229,8 @@ public class ObliviousTree {
 	 */
 	public synchronized byte[] signatureGenerate(){
 		// Initialize output holder; index at 0, initial size of 128 bytes
-		ObliviousTree.SignatureArray sig = new ObliviousTree.SignatureArray(0, 128);
-		ObliviousTree.signatureGenerateRecurse(this.root, sig);
+		ConcurrentObliviousTree.SignatureArray sig = new ConcurrentObliviousTree.SignatureArray(0, 128);
+		ConcurrentObliviousTree.signatureGenerateRecurse(this.root, sig);
 		// return truncated array of just signatures
 		return Arrays.copyOf(sig.data, sig.index);
 	} //*/
@@ -1238,7 +1238,7 @@ public class ObliviousTree {
 	 *  @param thisNode current node
 	 *  @param sig SignatureArray object holding current state
 	 */
-	private static void signatureGenerateRecurse(OTree_Elem thisNode, ObliviousTree.SignatureArray sig){
+	private static void signatureGenerateRecurse(OTree_Elem thisNode, ConcurrentObliviousTree.SignatureArray sig){
 		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
 		byte[] tmp;	// temporary array for holding byte rep of each node
 		
@@ -1302,8 +1302,8 @@ public class ObliviousTree {
 	 */
 	public static boolean signatureVerify(byte[] file, byte[] sig, Signature verifier){
 		// construct SignatureArrays from file and signature input
-		ObliviousTree.SignatureArray fileArray = new ObliviousTree.SignatureArray(0, 5);
-		ObliviousTree.SignatureArray sigArray = new ObliviousTree.SignatureArray();
+		ConcurrentObliviousTree.SignatureArray fileArray = new ConcurrentObliviousTree.SignatureArray(0, 5);
+		ConcurrentObliviousTree.SignatureArray sigArray = new ConcurrentObliviousTree.SignatureArray();
 		fileArray.data = file;
 		sigArray.data = sig;
 		try{
@@ -1318,7 +1318,7 @@ public class ObliviousTree {
 	 *  @return byte[] signature data for parent calculation
 	 *  @throws GeneralSecurityException when signature verification fails (I know this is terrible...)
 	 */
-	private static byte[] signatureVerifyRecurse(ObliviousTree.SignatureArray file, ObliviousTree.SignatureArray sig, Signature verifier) throws GeneralSecurityException{
+	private static byte[] signatureVerifyRecurse(ConcurrentObliviousTree.SignatureArray file, ConcurrentObliviousTree.SignatureArray sig, Signature verifier) throws GeneralSecurityException{
 		int sig_size, degree; // signature size and node degree to be read from input
 		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
 		byte[] tmp;		// temporary array for holding byte sig of each node
@@ -1350,7 +1350,7 @@ public class ObliviousTree {
 		// verify against file
 		else {
 			// use the smaller of default chunk size and remaining file portion
-			int chunk_size = (file.data.length-file.index > ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : file.data.length-file.index;
+			int chunk_size = (file.data.length-file.index > ConcurrentObliviousTree.CHUNK_SIZE) ? ConcurrentObliviousTree.CHUNK_SIZE : file.data.length-file.index;
 			data = Arrays.copyOfRange(file.data, file.index, file.index+chunk_size);
 			file.index+=chunk_size;
 		}
