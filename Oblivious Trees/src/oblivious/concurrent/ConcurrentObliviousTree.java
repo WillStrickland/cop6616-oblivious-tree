@@ -949,17 +949,7 @@ public class ConcurrentObliviousTree {
             
             return neighbor;            
         }
-
-	/** Fetches the ith leaf of the tree
-	 *  @param i index of leaf to return (indices start at 1)
-	 */
-	private synchronized OTree_Leaf getLeaf(int i)
-	{
-		OTree_Leaf leaf;
-		
-		leaf = (OTree_Leaf)treeNodes.get((i - 1));
-		return leaf;
-	}
+        
 	/** get number of chunks in OTree
 	 * @return int count of leafnodes/chunks in oblivious tree
 	 */
