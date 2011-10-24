@@ -3,7 +3,7 @@ package oblivious.concurrent;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class OTree_Node extends OTree_Elem {
+class OTree_Node extends OTree_Elem {
 
 	// Instance Variable
 	private OTree_Elem[] children;
