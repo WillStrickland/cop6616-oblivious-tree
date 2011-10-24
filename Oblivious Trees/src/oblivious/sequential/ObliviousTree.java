@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Signature;
@@ -21,7 +20,7 @@ import java.util.Vector;
  */
 public class ObliviousTree {
 
-	//
+	// main testing method
 	public static void main(String[] args) {
 		System.out.println("Hello, World!!!");
 		/*System.out.println("chunkSize = "+ObliviousTree.CHUNK_SIZE);
@@ -103,6 +102,74 @@ public class ObliviousTree {
 		System.out.println("sabotaged verify = "+ObliviousTree.signatureVerify(testfile, signOut, signatures[1]));
 	} //*/
 	
+	
+	
+	/* Class Properties */
+	public static final int CHUNK_SIZE = 100;	// File chunk size in bytes
+	private static final Random rndSrc = initPRNG();				// Random source for creating obliviousness
+	
+	/* Instance Properties */
+	private OTree_Node root;	// root node of tree
+	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
+	
+	/** Constructor generates empty initial tree.
+	 */
+	public ObliviousTree(){
+		root = new OTree_Node();
+	}
+	/** Constructor generates initial leaf node using using a given input file.
+	 */
+	public ObliviousTree(FileInputStream file, Signature signer){
+		//1). Instantiate root node
+		root = new OTree_Node();
+		treeNodes = new Vector<OTree_Elem>();
+		//2). Generate leaf nodes from the byte array
+		generateLeaves(file, signer);
+		//3). Create Oblivious Tree
+		create(signer);
+	}
+	/** Constructor generates initial leaf node using using a given input byte array.
+	 */
+	public ObliviousTree(byte[] file, Signature signer){
+		//1). Instantiate root node
+		root = new OTree_Node();
+		treeNodes = new Vector<OTree_Elem>();
+		//2). Generate leaf nodes from the byte array
+		generateLeaves(file, signer);
+		//3). Create Oblivious Tree
+		create(signer);
+	}
+	
+	/** Initialize psuedorandom number generator for class if not already initialized.
+	 *  @return new PRNG, null if failure
+	 */
+	private static Random initPRNG(){	
+		try {
+			Random tmpRnd = SecureRandom.getInstance("SHA1PRNG");
+			byte[] b = new byte[1];
+			tmpRnd.nextBytes(b);
+			return tmpRnd;
+		} catch (NoSuchAlgorithmException e){
+			return null;
+		}
+	}
+	/** Get information about psuedorandom number generator used.
+	 *  @return String describing psuedorandom number generator algorithm
+	 */
+	public static String PRNG_Info(){
+		Random this_rnd = rndSrc;
+		if (this_rnd != null){
+			String txt;
+			try {
+				txt = " - " + ((SecureRandom) this_rnd).getAlgorithm() + " - " + ((SecureRandom) this_rnd).getProvider().toString();
+			} catch (ClassCastException e){
+				txt = "";
+			}
+			return this_rnd.getClass().getName() + txt;
+		} else {
+			return "PRNG not initialized!";
+		}
+	}
 	/** Generates a public-private key pair at random and
 	 *  returns a signature for signing and another for verifying
 	 * 
@@ -126,111 +193,6 @@ public class ObliviousTree {
 			return null;
 		}
 		return sig;
-	}
-	
-	/**
-	 * Constructor generates initial leaf node using
-	 * using a given input file.
-	 *
-	 */
-	
-	/* Class Properties */
-	private static Random rndSrc;				// Random source for creating obliviousness
-	private static MessageDigest digest;		// Secure hashing function for leaves
-	public final static int CHUNK_SIZE = 100;	// File chunk size in bytes
-	
-	/* Instance Properties */
-	private OTree_Node root;	// root node of tree
-	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
-
-	
-	public ObliviousTree(){
-		// Initialize crypto stuff
-		initPRNG();
-		initDigest();
-		root = new OTree_Node();
-	}
-	
-	public ObliviousTree(FileInputStream file, Signature signer)
-	{
-		// Initialize crypto stuff
-		initPRNG();
-		initDigest();
-		//1). Instantiate root node
-		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
-		//2). Generate leaf nodes from the byte array
-		generateLeaves(file, signer);
-		//3). Create Oblivious Tree
-		create(signer);
-	}
-	public ObliviousTree(byte[] file, Signature signer)
-	{
-		// Initialize crypto stuff
-		initPRNG();
-		initDigest();
-		//1). Instantiate root node
-		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
-		//2). Generate leaf nodes from the byte array
-		generateLeaves(file, signer);
-		//3). Create Oblivious Tree
-		create(signer);
-	}
-	// Setup of cryptographic objects - PRNG for randomness and Message Digest for signatures
-	/** Initialize psuedorandom number generator for class if not already initialized.
-	 *  @return true if successful, else false
-	 */
-	private static boolean initPRNG(){	
-		if (rndSrc==null){
-			try {
-				rndSrc = SecureRandom.getInstance("SHA1PRNG");
-				byte[] b = new byte[1];
-				rndSrc.nextBytes(b);
-			} catch (NoSuchAlgorithmException e){
-				return false;
-			}
-		}
-		return true;
-	}
-	/** Get information about psuedorandom number generator used.
-	 *  @return String describing psuedorandom number generator algorithm
-	 */
-	public static String PRNG_Info(){
-		if (rndSrc != null){
-			String txt;
-			try {
-				txt = " - " + ((SecureRandom) rndSrc).getAlgorithm() + " - " + ((SecureRandom) rndSrc).getProvider().toString();
-			} catch (ClassCastException e){
-				txt = "";
-			}
-			return rndSrc.getClass().getName() + txt;
-		} else {
-			return "PRNG not initialized!";
-		}
-	}
-	/** Initialize message digest for class if not already initialized.
-	 *  @return true if successful, else false
-	 */
-	private static boolean initDigest(){	
-		if (digest==null){
-			try {
-				digest = MessageDigest.getInstance("SHA-1");
-			} catch (NoSuchAlgorithmException e){
-				return false;
-			}
-		}
-		return true;
-	}
-	/** Get information about message digest used.
-	 *  @return String describing message digest algorithm
-	 */
-	public static String Digest_Info(){
-		if (digest != null){
-			return digest.getAlgorithm()+ " - " + digest.getProvider().toString();
-		} else {
-			return "Digest not initialized!";
-		}
 	}
 	
 	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
@@ -362,106 +324,6 @@ public class ObliviousTree {
                 {                    
                 }
         }
-	private synchronized void generateTree()
-	{		
-		int randomDegree;
-		//The initial level will be the leaves that were added using the
-		//generateLeaves function
-		int numOfNodesAtLevel = treeNodes.size();
-		//This keeps track of how many nodes we add to a particular level
-		int nodesAdded = 0;
-		//We traverse through the Vector using nodeIndex, which is iterated
-		//whenever we add a child to a parent node.
-		int nodeIndex = 0;
-		//Keeps track of how many children we attach to a node at a higher
-		//level
-		int addCount;
-		//A counter to traverse through a level from left to right.
-		int traversingLevel;
-		OTree_Node treeNode;
-		
-		//Generate the initial uniform random degree
-		if(rndSrc.nextBoolean())
-		{
-			randomDegree = 2;
-		}
-		else
-		{
-			randomDegree = 3;
-		}
-		
-		//If the number of nodes added to the previous level is 1,
-		//then that means we've hit the limit and the loop needs
-		//to break. That 1 node added will be the root.
-		while(nodesAdded != 1)
-		{
-			//Reset the counter which keeps track of how many nodes were
-			//added to the previous level.
-			nodesAdded = 0;
-			
-			//We traverse the previous level by iterating through the nodes 
-			//we added. We increment this by the randomDegree value, which
-			//dictates how many children we attach to a parent.
-			for(traversingLevel = 0; traversingLevel < numOfNodesAtLevel; traversingLevel += randomDegree)
-			{
-				treeNode = new OTree_Node();
-				
-				//We take the current number of nodes we traversed through
-				//and increment it by the randomDegree like in the for loop.
-				//If this exceeds the number of node at that level, then 
-				//we set the degree to however many nodes at left. 
-				//traversingLevel is 0-aligned, so we add 1 to compensate			
-				if(((traversingLevel + randomDegree) + 1) > numOfNodesAtLevel)
-				{
-					//We take the difference between the excess number of 
-					//nodes and how many nodes are actually left at that
-					//level. This becomes the new randomDegree.
-					randomDegree = ((traversingLevel + randomDegree) + 1) - numOfNodesAtLevel;
-				}
-				
-				//We set the number of nodes we will be attaching to a 
-				//parent by the degree.
-				addCount = randomDegree;
-				
-				while(addCount > 0)
-				{
-					//Using the nodeIndex to grab the next node and set its
-					//parent to the current node. We then add those nodes
-					//to the children of the current node.
-					treeNodes.get(nodeIndex).setParent(treeNode);
-					treeNode.addChild(treeNodes.get(nodeIndex));
-					
-					//Iterate nodeIndex for every node we 'eat'
-					nodeIndex++;		 
-					addCount--;
-				}
-				
-				//Add the new node to the Vector
-				treeNodes.add(treeNode);
-				//Keep track of each node we add this way
-				nodesAdded++;
-				
-				//Generate the next randomDegree
-				if(rndSrc.nextBoolean())
-				{
-					randomDegree = 2;
-				}
-				else
-				{
-					randomDegree = 3;
-				}
-				
-			}
-			
-			//The number of of nodes at the level we just created to the 
-			//number of nodes we added to the Vector
-			numOfNodesAtLevel = nodesAdded;
-		}
-		
-		//Set the root after the loop breaks to finish off
-		//the tree.
-		root = (OTree_Node)treeNodes.get(nodeIndex);
-	}
         
         /**
          * 
