@@ -316,6 +316,7 @@ public class ConcurrentObliviousTree {
                         {
                         }
                         
+                        tempNode.calcLeafCnt();
                         currentLevel.add(tempNode);
                     }
                     
@@ -329,6 +330,52 @@ public class ConcurrentObliviousTree {
                 catch(NoSuchElementException e)
                 {                    
                 }
+        }
+        /**
+         * 
+         * @param byte[] value
+         * @param int i
+         * @param Signature signer
+         * @return void
+         */
+        public void concurrentInsert(byte[] value, int i, Signature signer)
+        {
+            Random this_rnd = rndSrc.get();
+            OTree_Elem tempNode;
+            OTree_Node parent;
+            OTree_Leaf newLeaf = new OTree_Leaf();
+            newLeaf.setSig(value);
+            int rangeStart = 1;
+            int rangeEnd;
+            int rngeCnt;
+            OTree_Elem[] children;
+            
+            tempNode = root;
+            children = tempNode.getChildren();
+            
+            while(children != null)
+            {                
+                for(rngeCnt = 0; rngeCnt < children.length; rngeCnt++)
+                {
+                    rangeEnd = rangeStart + ((children[rngeCnt].getLeafCnt()) - 1);
+                    
+                    if(i >= rangeStart && i <= rangeEnd)
+                    {
+                        tempNode = children[rngeCnt];
+                        break;
+                    }
+                    else
+                    {
+                        rangeStart += ((children[rngeCnt + 1].getLeafCnt()) - 1) ;
+                    }                                        
+                }
+                
+                children = tempNode.getChildren();
+            }
+            
+            parent = (OTree_Node)tempNode.getParent();
+            parent.addChild(newLeaf);
+            
         }
         
         /**
