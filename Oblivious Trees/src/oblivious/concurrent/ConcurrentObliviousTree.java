@@ -331,23 +331,16 @@ public class ConcurrentObliviousTree {
                 {                    
                 }
         }
+        
         /**
          * 
-         * @param byte[] value
          * @param int i
-         * @param Signature signer
-         * @return void
+         * @return OTree_Elem node
          */
-        public void concurrentInsert(byte[] value, int i, Signature signer)
+        public OTree_Elem getNode(int i)
         {
-            Random this_rnd = rndSrc.get();
             OTree_Elem tempNode;
-            OTree_Node parent;
-            OTree_Leaf newLeaf = new OTree_Leaf();
-            newLeaf.setSig(value);
-            int rangeStart = 1;
-            int rangeEnd;
-            int rngeCnt;
+            int rangeStart = 1, rangeEnd, rngeCnt, randomDegree;
             OTree_Elem[] children;
             
             tempNode = root;
@@ -373,9 +366,72 @@ public class ConcurrentObliviousTree {
                 children = tempNode.getChildren();
             }
             
-            parent = (OTree_Node)tempNode.getParent();
-            parent.addChild(newLeaf);
+            return tempNode;
+        }
+        
+        /**
+         * 
+         * @param byte[] value
+         * @param int i
+         * @param Signature signer
+         * @return void
+         */
+        public void concurrentInsert(byte[] value, int i, Signature signer)
+        {
+            Random this_rnd = rndSrc.get();
+            OTree_Elem currentNode = this.getNode(i);
+            OTree_Node parent = (OTree_Node)currentNode.getParent();
+            OTree_Leaf newLeaf = new OTree_Leaf();
+            OTree_Node newNode, newRoot;
+            int randomDegree;
             
+            newLeaf.setSig(value);
+            parent.addChild(newLeaf);
+            newLeaf.setParent(parent);
+            
+            randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
+            
+            /*
+             * The algorithm keeps going up level by level until we pass the
+             * root, at which point we stop
+             */      
+            
+            while(parent != null)
+            {
+                currentNode = parent;
+                
+                if(parent.getNeighbor() == null)
+                {
+                    if(parent.getDegree() == 2 || (parent.getDegree() == 3 && randomDegree == 3))
+                    {
+                        newNode = new OTree_Node();
+                        newRoot = new OTree_Node();
+                        
+                        root.setNeighbor(newNode);
+                        newNode.addChild(root.getChild(root.getDegree() - 1));
+                        root.getChild(root.getDegree() - 1).setParent(newNode);
+                        root.removeChild(root.getDegree() - 1);
+                        
+                        newRoot.addChild(root);
+                        newRoot.addChild(newNode);
+                        root.setParent(newRoot);
+                        newNode.setParent(newRoot);
+                        root = newRoot;
+                        
+                        /*
+                         * According to the Structural Agreement lemma, we're 
+                         * finished because all nodes are accounted for. We just
+                         * need to update the size information along the path
+                         * from the leaf to the root.
+                         */
+                    }
+                }
+                
+                /*
+                 * Occurs after all the previous operations
+                 */
+                parent = (OTree_Node)parent.getParent();
+            }
         }
         
         /**
