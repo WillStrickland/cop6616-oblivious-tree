@@ -13,6 +13,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** Oblivious Tree - COP 6616
  * @author William Strickland and Chris Fontaine
@@ -117,11 +119,16 @@ public class ConcurrentObliviousTree {
 	/* Instance Properties */
 	private OTree_Node root;	// root node of tree
 	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
+	private AtomicReference<TaskDesc> curTask;	// current task to be completed
+	private ConcurrentLinkedQueue<TaskDesc> taskQueue;	// queue of pending tasks
 	
 	/** Constructor generates empty initial tree.
 	 */
 	public ConcurrentObliviousTree(){
 		root = new OTree_Node();
+		// initialize task queue system
+		curTask = new AtomicReference<TaskDesc>(new TaskDesc());
+		taskQueue = new ConcurrentLinkedQueue<TaskDesc>();
 	}
 	/** Constructor generates initial leaf node using using a given input file.
 	 */
@@ -131,6 +138,9 @@ public class ConcurrentObliviousTree {
 		treeNodes = new Vector<OTree_Elem>();
 		//2). Create Oblivious Tree
 		create(generateLeaves(file, signer),signer);
+		// initialize task queue system
+		curTask = new AtomicReference<TaskDesc>(new TaskDesc());
+		taskQueue = new ConcurrentLinkedQueue<TaskDesc>();
 	}
 	/** Constructor generates initial leaf node using using a given input byte array.
 	 */
@@ -140,6 +150,9 @@ public class ConcurrentObliviousTree {
 		treeNodes = new Vector<OTree_Elem>();
 		//2). Create Oblivious Tree
 		create(generateLeaves(file, signer),signer);
+		// initialize task queue system
+		curTask = new AtomicReference<TaskDesc>(new TaskDesc());
+		taskQueue = new ConcurrentLinkedQueue<TaskDesc>();
 	}
 	
 	/** Initialize psuedorandom number generator for class if not already initialized.
@@ -1354,6 +1367,57 @@ public class ConcurrentObliviousTree {
 			return tmp;
 		}
 			
+	}
+	
+	// Task Queue Management
+	/** Atomically takes the next task from the queue and set curTask pointer
+	 *  (the task all threads are to to assist completing). Queue is the shared 
+	 *  list of all pending operations to the oblivious tree. Requires that a 
+	 *  VOID task currently be in the curTask slot (indicating the previous 
+	 *  task was completed). Can fail if queue is empty, curTask is not void or
+	 *  another thread succeeds setting the head before this one.
+	 *  @return true if successful, false if failed
+	 */
+	private boolean popTask(){
+		// get current task in queue
+		TaskDesc current = this.curTask.get();
+		// check if task is a void type (meaning last task was completed)
+		if (current.operation == TaskDesc.OpType.VOID){
+			// get peek at head of queue
+			TaskDesc head = this.taskQueue.peek();
+			if(head!=null && this.curTask.compareAndSet(current, head)){
+				this.taskQueue.remove(head);
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	/** Atomically sets a void TaskDesc into the curTask pointer. Used to clear
+	 *  a completed task from the system and allow all other threads to grab a
+	 *  new task from the queue.
+	 *  @return true if successful, false if failed
+	 */
+	private boolean completeTask(){
+		// get current task in queue
+		TaskDesc current = this.curTask.get();
+		// check if task is a void type (meaning last task already completed)
+		if (current.operation != TaskDesc.OpType.VOID){
+			// set a new void task into the current head
+			return this.curTask.compareAndSet(current, new TaskDesc());
+		} else {
+			return false;
+		}
+	}
+	/** Checks if task is has already been completed by consulting 
+	 *  the current task (curTask) and the task queue (taskQueue).
+	 *  @param t Task descriptor being checked
+	 *  @return true if task is curTask or in queue, else false.
+	 */
+	private boolean isPendingTask(TaskDesc t){
+		return this.taskQueue.contains(t) || this.curTask.get()==t;
 	}
 	
 }
