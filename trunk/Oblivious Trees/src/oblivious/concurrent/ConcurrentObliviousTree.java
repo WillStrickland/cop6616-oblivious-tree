@@ -1286,6 +1286,42 @@ public class ConcurrentObliviousTree {
 			
 	}
 	
+	
+	// Operation Processors
+	private void processQueue(TaskDesc t){
+		// while my task is still pending
+		while(isPendingTask(t)){
+			// get current task
+			TaskDesc current = this.curTask.get();
+			// invoke the correct handler for this task
+			switch (current.operation){
+				case INSERT:
+					processInvoke(t);
+					break;
+				case DELETE:
+					processDelete(t);
+					break;
+				case GENSIG:
+					processGenSig(t);
+					break;
+				case VOID:
+				default:
+					// get next operation from queue
+					popTask();
+					break;
+			}
+		}
+	}
+	private void processInvoke(TaskDesc t){
+		
+	}
+	private void processDelete(TaskDesc t){
+		
+	}
+	private void processGenSig(TaskDesc t){
+		
+	}
+	
 	// Task Queue Management
 	/** Atomically takes the next task from the queue and set curTask pointer
 	 *  (the task all threads are to to assist completing). Queue is the shared 
