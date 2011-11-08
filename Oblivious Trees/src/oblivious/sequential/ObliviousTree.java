@@ -86,30 +86,6 @@ public class ObliviousTree {
 			return "PRNG not initialized!";
 		}
 	}
-	/** Generates a public-private key pair at random and
-	 *  returns a signature for signing and another for verifying
-	 * 
-	 *  @return Signature[] index 0 = signing, index 1 = verifying
-	 */
-	private static Signature[] initSignature(){
-		Signature[] sig = new Signature[2];
-		try {
-			// create random source for key generation
-			SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
-			// create public-private key pair
-			KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
-			gen.initialize(1024, rnd);
-			KeyPair keys = gen.generateKeyPair();
-			// create signature object
-			sig[0] = Signature.getInstance("SHA1withDSA");
-			sig[0].initSign(keys.getPrivate());
-			sig[1] = Signature.getInstance("SHA1withDSA");
-			sig[1].initVerify(keys.getPublic());
-		} catch (Exception e){
-			return null;
-		}
-		return sig;
-	}
 	
 	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
