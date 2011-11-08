@@ -295,7 +295,7 @@ public class ConcurrentObliviousTree {
             OTree_Node currentNode = (OTree_Node)t.status.get().currentNode;
             OTree_Node neighbor;
             
-            if(currentNode != null)
+            while(currentNode != null)
             {
                 randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
                 
@@ -310,7 +310,7 @@ public class ConcurrentObliviousTree {
                     //currentNode = currentNode.getParent();
                 }
                 
-                
+                currentNode = (OTree_Node)currentNode.getParent();
             }
 //            OTree_Elem currentNode = this.getNode(i);
 //            OTree_Node parent = (OTree_Node)currentNode.getParent();
