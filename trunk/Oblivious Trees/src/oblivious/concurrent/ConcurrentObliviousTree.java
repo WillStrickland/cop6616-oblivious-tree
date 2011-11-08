@@ -6,7 +6,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.Signature; 
+import java.security.Signature;
 import java.security.SignatureException;
 import java.util.NoSuchElementException;
 import java.util.Arrays;
@@ -1050,7 +1050,14 @@ public class ConcurrentObliviousTree {
 		
 	}
 	private void processGenSig(TaskDesc t){
-		
+		DescStatus now = t.status.get();
+		if (now.stage == DescStatus.StatusType.OPEN){
+			byte[] tmpdata = signatureGenerate();
+			t.data.compareAndSet(null, new byteArrayWrapper(tmpdata));
+			DescStatus newStat = new DescStatus(DescStatus.StatusType.DONE);
+			t.status.compareAndSet(now, newStat);
+		}
+		completeTask(t);
 	}
 	
 	// Task Queue Management
@@ -1065,8 +1072,8 @@ public class ConcurrentObliviousTree {
 	private boolean popTask(){
 		// get current task in queue
 		TaskDesc current = this.curTask.get();
-		// check if task is a void type (meaning last task was completed)
-		if (current.operation == TaskDesc.OpType.VOID){
+		// check if task is done or  void type (meaning last task was completed)
+		if (current.status.get().stage == DescStatus.StatusType.DONE || current.operation == TaskDesc.OpType.VOID){
 			// get peek at head of queue
 			TaskDesc head = this.taskQueue.peek();
 			if(head!=null && this.curTask.compareAndSet(current, head)){
@@ -1088,9 +1095,25 @@ public class ConcurrentObliviousTree {
 		// get current task in queue
 		TaskDesc current = this.curTask.get();
 		// check if task is a void type (meaning last task already completed)
-		if (current.operation != TaskDesc.OpType.VOID){
+		if (current.status.get().stage == DescStatus.StatusType.DONE ||  current.operation != TaskDesc.OpType.VOID){
 			// set a new void task into the current head
 			return this.curTask.compareAndSet(current, new TaskDesc());
+		} else {
+			return false;
+		}
+	}
+	/** Atomically sets a void TaskDesc into the curTask pointer. Used to clear
+	 *  a completed task from the system and allow all other threads to grab a
+	 *  new task from the queue. This version clears a particular task from the
+	 *  curTask pointer and is therefore  it is a bit safer.
+	 *  @param t TaskDesc assumed to be curTask
+	 *  @return true if successful, false if failed
+	 */
+	private boolean completeTask(TaskDesc t){
+		// check if task is marked done or void type (meaning last task already completed)
+		if (t.status.get().stage == DescStatus.StatusType.DONE ||  t.operation != TaskDesc.OpType.VOID){
+			// set a new void task into the current head
+			return this.curTask.compareAndSet(t, new TaskDesc());
 		} else {
 			return false;
 		}
