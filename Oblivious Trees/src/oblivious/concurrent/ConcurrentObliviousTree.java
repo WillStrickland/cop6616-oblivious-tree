@@ -293,16 +293,31 @@ public class ConcurrentObliviousTree {
         {
             Random this_rnd = rndSrc.get();
             int randomDegree;
-            OTree_Leaf leaf;
-            OTree_Node currentNode = (OTree_Node)t.status.get().currentNode;
-            LinkedList<OTree_Elem> unassigned = t.status.get().unassigned;
+            OTree_Leaf leaf, newLeaf = new OTree_Leaf();
+            OTree_Node parent;
+            DescStatus oldStatus = t.status.get();
+            DescStatus newStatus;
+            OTree_Node currentNode = (OTree_Node)oldStatus.currentNode;
+            LinkedList<OTree_Elem> unassigned = oldStatus.unassigned;
             OTree_Node neighbor;
             
             while(t.status.get().stage != DescStatus.StatusType.DONE)
             {
                 if(t.status.get().stage == DescStatus.StatusType.NEW)
                 {
+                    leaf = (OTree_Leaf)getNode(t.index);
+                    parent = (OTree_Node)leaf.getParent();
+                    newLeaf.setSig(t.data.get().get());
+                    parent.addChild(newLeaf);
+                    newLeaf.setParent(parent);
                     
+                    newStatus = new DescStatus(DescStatus.StatusType.OPEN);
+                    
+                    if(t.status.compareAndSet(oldStatus, newStatus))
+                    {
+                        t.status.get().currentNode = parent;
+                        t.status.get().unassigned = new LinkedList<OTree_Elem>();
+                    }
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.OPEN)
                 {
