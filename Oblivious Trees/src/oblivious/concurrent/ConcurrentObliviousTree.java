@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 import java.util.Vector;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -292,79 +293,45 @@ public class ConcurrentObliviousTree {
         {
             Random this_rnd = rndSrc.get();
             int randomDegree;
+            OTree_Leaf leaf;
             OTree_Node currentNode = (OTree_Node)t.status.get().currentNode;
+            LinkedList<OTree_Elem> unassigned = t.status.get().unassigned;
             OTree_Node neighbor;
             
-            while(currentNode != null)
+            while(t.status.get().stage != DescStatus.StatusType.DONE)
             {
-                randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
-                
-                if(currentNode.getNeighbor() != null)
+                if(t.status.get().stage == DescStatus.StatusType.NEW)
                 {
-                    neighbor = (OTree_Node)currentNode.getNeighbor();
+                    
                 }
-                else
+                else if(t.status.get().stage == DescStatus.StatusType.OPEN)
                 {
-                    //Coming here means you've reached the end of the level,
-                    //and you need to go up to the next one.s
-                    //currentNode = currentNode.getParent();
+                    
                 }
-                
-                currentNode = (OTree_Node)currentNode.getParent();
-            }
-//            OTree_Elem currentNode = this.getNode(i);
-//            OTree_Node parent = (OTree_Node)currentNode.getParent();
-//            OTree_Leaf newLeaf = new OTree_Leaf();
-//            OTree_Node newNode, newRoot;
-//            int randomDegree;
-//            
-//            newLeaf.setSig(value);
-//            parent.addChild(newLeaf);
-//            newLeaf.setParent(parent);
-//            
-//            randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
-//            
-//            /*
-//             * The algorithm keeps going up level by level until we pass the
-//             * root, at which point we stop
-//             */      
-//            
-//            while(parent != null)
+                else if(t.status.get().stage == DescStatus.StatusType.LINK)
+                {
+                    
+                }
+            };
+            
+//            while(currentNode != null)
 //            {
-//                currentNode = parent;
+//                randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
 //                
-//                if(parent.getNeighbor() == null)
+//                if(currentNode.getNeighbor() != null)
 //                {
-//                    if(parent.getDegree() == 2 || (parent.getDegree() == 3 && randomDegree == 3))
-//                    {
-//                        newNode = new OTree_Node();
-//                        newRoot = new OTree_Node();
-//                        
-//                        root.setNeighbor(newNode);
-//                        newNode.addChild(root.getChild(root.getDegree() - 1));
-//                        root.getChild(root.getDegree() - 1).setParent(newNode);
-//                        root.removeChild(root.getDegree() - 1);
-//                        
-//                        newRoot.addChild(root);
-//                        newRoot.addChild(newNode);
-//                        root.setParent(newRoot);
-//                        newNode.setParent(newRoot);
-//                        root = newRoot;
-//                        
-//                        /*
-//                         * According to the Structural Agreement lemma, we're 
-//                         * finished because all nodes are accounted for. We just
-//                         * need to update the size information along the path
-//                         * from the leaf to the root.
-//                         */
-//                    }
+//                    neighbor = (OTree_Node)currentNode.getNeighbor();
+//                }
+//                else
+//                {
+//                    //Coming here means you've reached the end of the level,
+//                    //and you need to go up to the next one.s
+//                    //currentNode = currentNode.getParent();
 //                }
 //                
-//                /*
-//                 * Occurs after all the previous operations
-//                 */
-//                parent = (OTree_Node)parent.getParent();
+//                currentNode = (OTree_Node)currentNode.getParent();
 //            }
+            
         }
         
         /**
@@ -584,9 +551,32 @@ public class ConcurrentObliviousTree {
 	 */
 	public void insert(byte[] value, int i, Signature signer)
 	{
+                byte[] signedValue = {127,127,127,0};
                 TaskDesc task_descriptor = new TaskDesc(TaskDesc.OpType.INSERT);
+                
+                task_descriptor.index = i;
+                task_descriptor.sig = signer;
                 task_descriptor.status = new AtomicReference(new DescStatus(DescStatus.StatusType.NEW));
-                task_descriptor.data = new AtomicReference(new byteArrayWrapper(value));
+                
+                try
+                {
+                    signer.update(value);
+                }
+                catch(SignatureException e)
+                {
+                    
+                }
+                
+                try
+                {
+                    signedValue = signer.sign();
+                }
+                catch(SignatureException e)
+                {
+                    
+                }
+                
+                task_descriptor.data = new AtomicReference(new byteArrayWrapper(signedValue));
                 taskQueue.add(task_descriptor);                                     
         }
 	//
@@ -1044,7 +1034,7 @@ public class ConcurrentObliviousTree {
 		}
 	}
 	private void processInvoke(TaskDesc t){
-		this.concurrentInsert(t);          
+		//this.concurrentInsert(t);          
 	}
 	private void processDelete(TaskDesc t){
 		
