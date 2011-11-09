@@ -294,7 +294,8 @@ public class ConcurrentObliviousTree {
             Random this_rnd = rndSrc.get();
             int randomDegree;
             OTree_Leaf leaf, newLeaf = new OTree_Leaf();
-            OTree_Node parent;
+            OTree_Node parent, newSubTree;
+            OTree_Elem[] children;
             DescStatus oldStatus = t.status.get();
             DescStatus newStatus;
             OTree_Node currentNode = (OTree_Node)oldStatus.currentNode;
@@ -307,6 +308,7 @@ public class ConcurrentObliviousTree {
                 {
                     leaf = (OTree_Leaf)getNode(t.index);
                     parent = (OTree_Node)leaf.getParent();
+                    children = parent.getChildren();
                     newLeaf.setSig(t.data.get().get());
                     parent.addChild(newLeaf);
                     newLeaf.setParent(parent);
@@ -321,11 +323,11 @@ public class ConcurrentObliviousTree {
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.OPEN)
                 {
-                    
+                    //Traverse across level or up tree
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.LINK)
                 {
-                    
+                    //Attach proposed subtree
                 }
             };
             
