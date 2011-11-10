@@ -323,7 +323,19 @@ public class ConcurrentObliviousTree {
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.OPEN)
                 {
-                    //Traverse across level or up tree
+                    if(t.status.get().currentNode.getParent() != null)
+                    {
+                        
+                    }
+                    else
+                    {
+                        newStatus = new DescStatus(DescStatus.StatusType.DONE);
+                        
+                        if(t.status.compareAndSet(oldStatus, newStatus))
+                        {
+                            
+                        }
+                    }
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.LINK)
                 {
