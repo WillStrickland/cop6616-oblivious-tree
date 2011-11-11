@@ -309,23 +309,34 @@ public class ConcurrentObliviousTree {
                     leaf = (OTree_Leaf)getNode(t.index);
                     parent = (OTree_Node)leaf.getParent();
                     children = parent.getChildren();
-                    newLeaf.setSig(t.data.get().get());
-                    parent.addChild(newLeaf);
-                    newLeaf.setParent(parent);
                     
                     newStatus = new DescStatus(DescStatus.StatusType.OPEN);
                     
                     if(t.status.compareAndSet(oldStatus, newStatus))
                     {
+                        /*
+                         * Updates to the tree can ONLY be made by the thread 
+                         * that passes the compareAndSet
+                         */
+                        newLeaf.setSig(t.data.get().get());
+                        parent.addChild(newLeaf);
+                        newLeaf.setParent(parent);
+                        
                         t.status.get().currentNode = parent;
                         t.status.get().unassigned = new LinkedList<OTree_Elem>();
+                        t.status.get().unassigned.add(children[children.length - 1]);
                     }
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.OPEN)
                 {
+                    //If the status is open, then that means we need to propose
+                    //a new subtree to replace whatever the currentNode is
                     if(t.status.get().currentNode.getParent() != null)
                     {
-                        
+                        if(t.status.get().currentNode.getNeighbor() == null)
+                        {
+                            
+                        }
                     }
                     else
                     {
@@ -339,7 +350,7 @@ public class ConcurrentObliviousTree {
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.LINK)
                 {
-                    //Attach proposed subtree
+                    //Attach proposed subtree that created during the OPEN phase
                 }
             };
             
