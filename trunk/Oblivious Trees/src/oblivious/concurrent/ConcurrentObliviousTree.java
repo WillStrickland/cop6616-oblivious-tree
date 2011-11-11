@@ -331,6 +331,12 @@ public class ConcurrentObliviousTree {
                 {
                     //If the status is open, then that means we need to propose
                     //a new subtree to replace whatever the currentNode is
+                    
+                    newSubTree = new OTree_Node();
+                    
+                    //The first thing that must be done is to figure where you
+                    //are in the tree based on the currentNode. Do I need to 
+                    //go up one level or continue on the current level?
                     if(t.status.get().currentNode.getParent() != null)
                     {
                         if(t.status.get().currentNode.getNeighbor() == null)
