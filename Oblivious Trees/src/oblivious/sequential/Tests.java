@@ -9,7 +9,7 @@ import java.util.Vector;
 
 import application.TestApplication;
 
-import oblivious.sequential.ObliviousTree;
+import oblivious.sequential.SequentialObliviousTree;
 
 @SuppressWarnings("unused")
 public class Tests {

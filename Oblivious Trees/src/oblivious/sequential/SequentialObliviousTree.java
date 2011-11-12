@@ -1,11 +1,6 @@
 package oblivious.sequential;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.NoSuchElementException;
@@ -14,14 +9,15 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.Vector;
 
+import oblivious.ObliviousTree;
+
 /** Oblivious Tree - COP 6616
  * @author William Strickland and Chris Fontaine
  * @version Sequential Implementation
  */
-public class ObliviousTree {
+public class SequentialObliviousTree extends oblivious.ObliviousTree{
 
 	/* Class Properties */
-	public static final int CHUNK_SIZE = 100;	// File chunk size in bytes
 	private static final Random rndSrc = initPRNG();				// Random source for creating obliviousness
 	
 	/* Instance Properties */
@@ -30,12 +26,12 @@ public class ObliviousTree {
 	
 	/** Constructor generates empty initial tree.
 	 */
-	public ObliviousTree(){
+	public SequentialObliviousTree(){
 		root = new OTree_Node();
 	}
 	/** Constructor generates initial leaf node using using a given input file.
 	 */
-	public ObliviousTree(FileInputStream file, Signature signer){
+	public SequentialObliviousTree(FileInputStream file, Signature signer){
 		//1). Instantiate root node
 		root = new OTree_Node();
 		treeNodes = new Vector<OTree_Elem>();
@@ -46,7 +42,7 @@ public class ObliviousTree {
 	}
 	/** Constructor generates initial leaf node using using a given input byte array.
 	 */
-	public ObliviousTree(byte[] file, Signature signer){
+	public SequentialObliviousTree(byte[] file, Signature signer){
 		//1). Instantiate root node
 		root = new OTree_Node();
 		treeNodes = new Vector<OTree_Elem>();
@@ -56,36 +52,7 @@ public class ObliviousTree {
 		create(signer);
 	}
 	
-	/** Initialize psuedorandom number generator for class if not already initialized.
-	 *  @return new PRNG, null if failure
-	 */
-	private static Random initPRNG(){	
-		try {
-			Random tmpRnd = SecureRandom.getInstance("SHA1PRNG");
-			byte[] b = new byte[1];
-			tmpRnd.nextBytes(b);
-			return tmpRnd;
-		} catch (NoSuchAlgorithmException e){
-			return null;
-		}
-	}
-	/** Get information about psuedorandom number generator used.
-	 *  @return String describing psuedorandom number generator algorithm
-	 */
-	public static String PRNG_Info(){
-		Random this_rnd = rndSrc;
-		if (this_rnd != null){
-			String txt;
-			try {
-				txt = " - " + ((SecureRandom) this_rnd).getAlgorithm() + " - " + ((SecureRandom) this_rnd).getProvider().toString();
-			} catch (ClassCastException e){
-				txt = "";
-			}
-			return this_rnd.getClass().getName() + txt;
-		} else {
-			return "PRNG not initialized!";
-		}
-	}
+	
 	
 	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
 	 *  and, after taking a number between two and three, generate a number of non-leaf, which
@@ -927,61 +894,15 @@ public class ObliviousTree {
 			return false;
 		}
 	}
-	/* failed attempt at breadth-first implementation
-	 * generate the signature output of algorithm
-	 * outputs each node in signature as {sig_size}{sig}{degree} in breadth-first order
-	 *  @return byte[] of current complete signature, null if failure
-	 */ 
-	/* 
-	public byte[] generateSig(){
-		byte[] rtn = new byte[128];	// signature output byte array
-		int i=0;	// index into output array
-		LinkedList<OTree_Elem> nodeQueue = new LinkedList<OTree_Elem>();	// list of unprocessed nodes
-		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
-		byte[] tmp;	// temporary array for holding byte rep of each node
-		
-		// add root to queue to begin
-		nodeQueue.add(this.root);
-		// output tree with breadth-first traversal
-		while(!nodeQueue.isEmpty()){
-			// get next node
-			OTree_Elem thisNode = nodeQueue.remove();
-			// add children of this node to queue
-			nodeQueue.addAll(Arrays.asList(thisNode.getChildren()));
-			// get byte signature of current node
-			tmp = thisNode.getSig();
-			// while rtn not big enough
-			while((rtn.length-i)<(tmp.length+8)){
-				// resize rtn to double
-				rtn = Arrays.copyOf(rtn, rtn.length*2);
-			}
-			// write node into rtn 
-			// prepend with signature size
-			buf.putInt(0, tmp.length);
-			// copy signature into rtn
-			System.arraycopy(buf.array(), 0, rtn, i, 4);
-			buf.clear();
-			i+=4;
-			// copy signature into rtn
-			System.arraycopy(tmp, 0, rtn, i, tmp.length);
-			i += tmp.length;
-			// append with degree
-			buf.putInt(0, thisNode.getDegree());
-			System.arraycopy(buf.array(), 0, rtn, i, 4);
-			//buf.clear();
-			i+=4;
-		}
-		// return truncated array of just signatures
-		return Arrays.copyOf(rtn, i);
-	} //*/
+	
 	/** generate the signature output of algorithm
 	 * outputs each node in signature as {sig_size}{sig}{degree} in depth-first preorder
 	 *  @return byte[] of current complete signature, null if failure
 	 */
 	public synchronized byte[] signatureGenerate(){
 		// Initialize output holder; index at 0, initial size of 128 bytes
-		ObliviousTree.SignatureArray sig = new ObliviousTree.SignatureArray(0, 128);
-		ObliviousTree.signatureGenerateRecurse(this.root, sig);
+		ObliviousTree.ByteOutArray sig = new ObliviousTree.ByteOutArray(0, 128);
+		SequentialObliviousTree.signatureGenerateRecurse(this.root, sig);
 		// return truncated array of just signatures
 		return Arrays.copyOf(sig.data, sig.index);
 	} //*/
@@ -989,20 +910,15 @@ public class ObliviousTree {
 	 *  @param thisNode current node
 	 *  @param sig SignatureArray object holding current state
 	 */
-	private static void signatureGenerateRecurse(OTree_Elem thisNode, ObliviousTree.SignatureArray sig){
+	private static void signatureGenerateRecurse(OTree_Elem thisNode, ObliviousTree.ByteOutArray sig){
 		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
 		byte[] tmp;	// temporary array for holding byte rep of each node
 		
 		// get byte signature of current node
 		tmp = thisNode.getSig();
-		
-		// while sig data not big enough to append this node
-		while((sig.data.length-sig.index)<(tmp.length+8)){
-			// resize sig data to double
-			sig.data = Arrays.copyOf(sig.data, sig.data.length*2);
-		}
-		
-		// write node into sig data 
+		// fix size to accept this node
+		sig.append(tmp.length+8);
+		// write node into sig data
 		// prepend with signature size
 		buf.putInt(0, tmp.length);
 		// copy signature into sig data
@@ -1026,113 +942,4 @@ public class ObliviousTree {
 		}
 		
 	}
-	/** helper class for storing state of signature output
-	 *  used for outputting signatures and verification
-	 */
-	private static class SignatureArray {
-		protected int index;
-		protected byte[] data;
-		protected SignatureArray(){
-			index = 0;
-			data = new byte[1];
-		}
-		protected SignatureArray(int i, int size){
-			index = i;
-			data = new byte[size];
-		}
-		
-	}
-	/** verify if a signature is correct given the file and public key
-	 *  accepts signatures in the format produced by generateSig()
-	 *  verifies each node of tree against children until reaches leaves
-	 *  for each leaf verifies against matching chunk of file 
-	 *  @param file document to be verified
-	 *  @param sig signature tree to be used
-	 *  @param verifier Signature to verify tree and file with
-	 *  @return true if valid, false if invalid
-	 */
-	public static boolean signatureVerify(byte[] file, byte[] sig, Signature verifier){
-		// construct SignatureArrays from file and signature input
-		ObliviousTree.SignatureArray fileArray = new ObliviousTree.SignatureArray(0, 5);
-		ObliviousTree.SignatureArray sigArray = new ObliviousTree.SignatureArray();
-		fileArray.data = file;
-		sigArray.data = sig;
-		try{
-			// try and verify the file using signature file and verifier
-			signatureVerifyRecurse(fileArray, sigArray, verifier);
-		} catch (GeneralSecurityException e){
-			return false;
-		}
-		return true;
-	} //*/
-	/** recursive function to reconstruct and verify tree and file using verifying signature
-	 *  @return byte[] signature data for parent calculation
-	 *  @throws GeneralSecurityException when signature verification fails (I know this is terrible...)
-	 */
-	private static byte[] signatureVerifyRecurse(ObliviousTree.SignatureArray file, ObliviousTree.SignatureArray sig, Signature verifier) throws GeneralSecurityException{
-		int sig_size, degree; // signature size and node degree to be read from input
-		ByteBuffer buf = ByteBuffer.allocate(4);	// bytebuffer for doing int to byte[] conversions
-		byte[] tmp;		// temporary array for holding byte sig of each node
-		byte[] data;	// temporary array for storing data to be verified
-		
-		// read signature size from file
-		buf.put(sig.data, sig.index, 4);
-		sig_size = buf.getInt(0);
-		buf.clear();
-		sig.index+=4;
-		// read signature
-		tmp = Arrays.copyOfRange(sig.data, sig.index, sig.index+sig_size);
-		sig.index+=sig_size;
-		// read degree
-		buf.put(sig.data, sig.index, 4);
-		degree = buf.getInt(0);
-		//buf.clear();
-		sig.index+=4;
-		
-		// if has children verify against children
-		if (degree>0){
-			data = null;
-			// gather children signatures
-			for (int j=0; j<degree; j++){
-				// concatenate child segments together
-				data = concatArrays(data, signatureVerifyRecurse(file, sig, verifier));
-			}
-		}
-		// verify against file
-		else {
-			// use the smaller of default chunk size and remaining file portion
-			int chunk_size = (file.data.length-file.index > ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : file.data.length-file.index;
-			data = Arrays.copyOfRange(file.data, file.index, file.index+chunk_size);
-			file.index+=chunk_size;
-		}
-		
-		// validate signature
-		verifier.update(data);
-		if (!verifier.verify(tmp)){
-			throw new GeneralSecurityException();
-		}
-		// 
-		return tmp;
-	}
-	/** helper method to concatenate byte arrays together
-	 * ordered as AB, will accept either as null
-	 * @param A first array
-	 * @param B second array
-	 * @return byte[] concatenated arrays, null if both arrays null
-	 */
-	private static byte[] concatArrays(byte[] A, byte[] B){
-		if(A==null && B==null){
-			return null;
-		} else if (A==null){
-			return B;
-		} else if(B==null){
-			return A;
-		} else {
-			byte[] tmp = Arrays.copyOf(A, A.length+B.length);
-			System.arraycopy(B, 0, tmp, A.length, B.length);
-			return tmp;
-		}
-			
-	}
-	
 }
