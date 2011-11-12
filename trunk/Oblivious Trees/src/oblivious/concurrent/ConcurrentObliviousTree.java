@@ -294,7 +294,7 @@ public class ConcurrentObliviousTree {
             Random this_rnd = rndSrc.get();
             int randomDegree;
             OTree_Leaf leaf, newLeaf = new OTree_Leaf();
-            OTree_Node parent, newSubTree;
+            OTree_Node parent, newSubTree, temp;
             OTree_Elem[] children;
             DescStatus oldStatus = t.status.get();
             DescStatus newStatus;
@@ -324,7 +324,7 @@ public class ConcurrentObliviousTree {
                         
                         t.status.get().currentNode = parent;
                         t.status.get().unassigned = new LinkedList<OTree_Elem>();
-                        t.status.get().unassigned.add(children[children.length - 1]);
+                        //t.status.get().unassigned.add(children[children.length - 1]);
                     }
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.OPEN)
@@ -333,6 +333,30 @@ public class ConcurrentObliviousTree {
                     //a new subtree to replace whatever the currentNode is
                     
                     newSubTree = new OTree_Node();
+                    children = t.status.get().currentNode.getChildren();
+                    
+                    if(t.status.get().unassigned.size() > 0)
+                    {
+                        int limit =  t.status.get().unassigned.size();
+                        //insert unassigned nodes into currentNode
+                        for(int transfer1 = 0; transfer1 < limit; transfer1++)
+                        {                            
+                            newSubTree.addChild(t.status.get().unassigned.pop());
+                        }                        
+                    }
+                    
+                    for(int transfer2 = 0; transfer2 < children.length; transfer2++)
+                    {
+                        newSubTree.addChild(children[transfer2]);
+                    }
+                    
+                    randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
+                    
+                    for(int transfer3 = 0; transfer3 < randomDegree; transfer3++)
+                    {
+                        t.status.get().unassigned.push(newSubTree.getChild(newSubTree.getDegree() - 1));
+                        newSubTree.removeChild(newSubTree.getDegree() - 1);
+                    }
                     
                     //The first thing that must be done is to figure where you
                     //are in the tree based on the currentNode. Do I need to 
