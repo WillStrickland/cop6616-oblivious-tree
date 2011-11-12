@@ -10,26 +10,109 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Signature;
+import java.util.Arrays;
 import java.util.Random;
 
+import application.Act.OpType;
+
+import oblivious.ObliviousTree;
 import oblivious.concurrent.ConcurrentObliviousTree;
-import oblivious.sequential.ObliviousTree;
+import oblivious.sequential.SequentialObliviousTree;
 
 @SuppressWarnings("unused")
 public class TestApplication {
 
 	// Some state stuff
-	ObliviousTree tree;
 	Random rnd;
-	// get signature objects for signing and verifying
-	// [0] is for signing
-	// [1] is for verifying
+	// get signature objects for signing and verifying: [0] signing, [1] verifying
 	Signature[] signatures;
+	ObliviousTree tree;
+	byte[] file;
+	long startTime;
 	
+	/** default constructor 
+	 */
 	public TestApplication(){
+		// rnd and crypto
 		rnd = initPRNG();
 		signatures = initSignature();
+		// create file
+		int init_size = 10; // initial size in chunks
+		file = new byte[init_size*ObliviousTree.CHUNK_SIZE];
+		rnd.nextBytes(file);
+		// build tree
+		tree = new SequentialObliviousTree(file, signatures[0]);
+		// set start time
+		startTime = System.currentTimeMillis();
 	}
+	/** TestApplication constructor
+	 * @param filesize size of random input to use
+	 */
+	public TestApplication(int filesize){
+		// rnd and crypto
+		rnd = initPRNG();
+		signatures = initSignature();
+		// create file
+		file = new byte[filesize*ObliviousTree.CHUNK_SIZE];
+		rnd.nextBytes(file);
+		// build tree
+		tree = new SequentialObliviousTree(file, signatures[0]);
+		// set start time
+		startTime = System.currentTimeMillis();
+	}
+	/** TestApplication constructor
+	 * @param f byte file to use as input
+	 */
+	public TestApplication(byte[] f){
+		// rnd and crypto
+		rnd = initPRNG();
+		signatures = initSignature();
+		// create file
+		file = Arrays.copyOf(f, f.length);
+		rnd.nextBytes(file);
+		// build tree
+		tree = new SequentialObliviousTree(file, signatures[0]);
+		// set start time
+		startTime = System.currentTimeMillis();
+	}
+	/** Initialize psuedorandom number generator
+	 *  @return new psuedorandom number generator, null if error
+	 */
+	public static Random initPRNG(){	
+		Random tmp;
+		try {
+			tmp = SecureRandom.getInstance("SHA1PRNG");
+			byte[] b = new byte[1];
+			tmp.nextBytes(b);
+			return tmp;
+		} catch (NoSuchAlgorithmException e){
+			return null;
+		}
+	}
+	/** Generates a public-private key pair at random and
+	 *  returns a signature for signing and another for verifying
+	 *  @return Signature[] indices: 0 = signing, 1 = verifying
+	 */
+	public static Signature[] initSignature(){
+		Signature[] sig = new Signature[2];
+		try {
+			// create random source for key generation
+			SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
+			// create public-private key pair
+			KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
+			gen.initialize(1024, rnd);
+			KeyPair keys = gen.generateKeyPair();
+			// create signature object
+			sig[0] = Signature.getInstance("SHA1withDSA");
+			sig[0].initSign(keys.getPrivate());
+			sig[1] = Signature.getInstance("SHA1withDSA");
+			sig[1].initVerify(keys.getPublic());
+		} catch (Exception e){
+			return null;
+		}
+		return sig;
+	}	
+	
 	
 	public static void main(String[] args) {
 		
@@ -67,129 +150,80 @@ public class TestApplication {
 	/** code for having random threads do random inserts and deletes on a shared oblivious tree
 	 */
 	private static void testRndActions(){
-		TestApplication test = new TestApplication();		
-		ObliviousTree OT = createOTree(test.rnd, test.signatures[0]);
+		// generate test application
+		TestApplication test = new TestApplication();
 		
 		int Actor_Actions = 10;
 		RandomActor[] Actors = new RandomActor[10];
 		// initalize actors
 		for (int i=0; i<Actors.length; i++){
 			Actors[i] = new RandomActor();
-			Actors[i].setActions(Actor_Actions);
+			Actors[i].setActCnt(Actor_Actions);
 			Actors[i].setTest(test);
 		}
 		// start actors running
 		for(int i=0; i<Actors.length; i++){
 			Actors[i].run();
 		}
-		
-		
 	}
 	
-	/** Initialize psuedorandom number generator
-	 *  @return new psuedorandom number generator, null if error
+	// Methods for Actors to perform actions on instance oblivious Tree
+	/** Perform a random action then on instance oblivious tree
+	 * @return Act describing the action done
 	 */
-	public static SecureRandom initPRNG(){	
-		SecureRandom tmp;
-		try {
-			tmp = SecureRandom.getInstance("SHA1PRNG");
-			byte[] b = new byte[1];
-			tmp.nextBytes(b);
-			return tmp;
-		} catch (NoSuchAlgorithmException e){
-			return null;
-		}
-	}
-	/** Generates a public-private key pair at random and
-	 *  returns a signature for signing and another for verifying
-	 *  @return Signature[] indices: 0 = signing, 1 = verifying
-	 */
-	public static Signature[] initSignature(){
-		Signature[] sig = new Signature[2];
-		try {
-			// create random source for key generation
-			SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
-			// create public-private key pair
-			KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
-			gen.initialize(1024, rnd);
-			KeyPair keys = gen.generateKeyPair();
-			// create signature object
-			sig[0] = Signature.getInstance("SHA1withDSA");
-			sig[0].initSign(keys.getPrivate());
-			sig[1] = Signature.getInstance("SHA1withDSA");
-			sig[1].initVerify(keys.getPublic());
-		} catch (Exception e){
-			return null;
-		}
-		return sig;
-	}	
-	
-	/** code to create a OTree from some random data
-	 *  @return new Oblivious Tree
-	 */
-	public static ObliviousTree createOTree(Random rnd, Signature signer){
-		int init_size = 10; // initial size in chunks
-		byte[] file = new byte[init_size*ObliviousTree.CHUNK_SIZE];
-		rnd.nextBytes(file);
-		return new ObliviousTree(file, signer);
-	}
-	/** insert a random chunk of data into a random position in an oblivious tree
-	 *  @param o ObliviousTree
-	 *  @param signer signature for signing
-	 */
-	public static void insertOTree(ObliviousTree o, Random rnd, Signature signer){
-		// position to insert
-		int i;
-		i = rnd.nextInt(o.getSize()+1);
-		// chunk to insert
-		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
-		rnd.nextBytes(chunk);
-		// do insert
-		o.insert(chunk, i, signer);
-	}
-	/** delete a chunk at random from an oblivious tree
-	 *  @param o ObliviousTree
-	 *  @param signer signature for signing
-	 */
-	public static void deleteOTree(ObliviousTree o, Random rnd, Signature signer){
-		// position to delete
-		int i;
-		i = rnd.nextInt(o.getSize());
-		// do delete
-		o.delete(i, signer);
-	}
-	/** get the whole signature of an oblivious tree
-	 *  @param o ObliviousTree
-	 */
-	public static void sigOTree(ObliviousTree o){
-		byte[] tmp = o.signatureGenerate();	
-	}
-	
-	public void buttonMash(){
+	public Act buttonMash(){
+		Act a = new Act();
 		// Roll for random action
 		int act = rnd.nextInt(11);
 		if (act>=0 && act<=4){
-			TestApplication.insertOTree(this.tree, this.rnd, this.signatures[0]);
+			// position to insert
+			int i = this.rnd.nextInt(this.tree.getSize()+1);
+			// chunk to insert
+			byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
+			this.rnd.nextBytes(chunk);
+			// set act parameters
+			a.setOperation(OpType.INSERT);
+			a.setLocation(i);
+			a.setData(chunk);
+			a.setTime(System.currentTimeMillis()-this.startTime);
+			// do insert
+			this.tree.insert(chunk, i, this.signatures[0]);
 		} else if (act>=5 && act<=9){
-			TestApplication.deleteOTree(this.tree, this.rnd, this.signatures[0]);
+			// position to insert
+			int i = this.rnd.nextInt(this.tree.getSize()+1);
+			// set act parameters
+			a.setOperation(OpType.DELETE);
+			a.setLocation(i);
+			a.setTime(System.currentTimeMillis()-this.startTime);
+			// do delete
+			this.tree.delete(i, this.signatures[0]);
 		} else if (act>=10 && act<=10){
-			TestApplication.sigOTree(this.tree);
+			// set act parameters
+			a.setOperation(OpType.GENSIG);
+			a.setTime(System.currentTimeMillis()-this.startTime);
+			// do generate signatures
+			this.tree.signatureGenerate();
 		}
+		return a;
 	}
-	public void buttonMash(int i){
-		int act = i;
-		if (act>=0 && act<=4){
-			TestApplication.insertOTree(this.tree, this.rnd, this.signatures[0]);
-		} else if (act>=5 && act<=9){
-			TestApplication.deleteOTree(this.tree, this.rnd, this.signatures[0]);
-		} else if (act>=10 && act<=10){
-			TestApplication.sigOTree(this.tree);
-		}
+	/** execute scripted action described by Act
+	 *  @param a Action to perform on instance oblivious tree
+	 */
+	public void buttonPush(Act a){
+		switch (a.getOperation()){
+			case INSERT:
+				this.tree.insert(a.getData(), a.getLocation(), this.signatures[0]);
+				break;
+			case DELETE:
+				this.tree.delete(a.getLocation(), this.signatures[0]);
+				break;
+			case GENSIG:
+				this.tree.signatureGenerate();
+				break;
+			default:
+				break;
+		}	
 	}
-	public int buttonPick(){
-		return 1;
-	}
-	
 	
 
 }

@@ -15,7 +15,7 @@ class TaskDesc {
 	protected OpType operation;	// the operation to be performed
 	protected int index;	// 
 	protected Signature sig; // signature to use for signing
-	protected AtomicReference<byteArrayWrapper> data;	// data to be passed into array
+	protected AtomicReference<ByteArrayWrapper> data;	// data to be passed into array
 	protected AtomicReference<DescStatus> status;	// 
 
 	
@@ -27,7 +27,7 @@ class TaskDesc {
 		this.operation = TaskDesc.OpType.VOID;
 		this.index = -1;
 		this.sig = null;
-		this.data = new AtomicReference<byteArrayWrapper>();
+		this.data = new AtomicReference<ByteArrayWrapper>();
 		this.status = new AtomicReference<DescStatus>();
 	}
 	/** construct new Task Descriptor
@@ -38,7 +38,7 @@ class TaskDesc {
 		this.operation = TaskDesc.OpType.VOID;
 		this.index = -1;
 		this.sig = null;
-		this.data = new AtomicReference<byteArrayWrapper>();
+		this.data = new AtomicReference<ByteArrayWrapper>();
 		this.status = new AtomicReference<DescStatus>();
 	}
 	/* construct new Task Descriptor
