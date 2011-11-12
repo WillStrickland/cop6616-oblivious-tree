@@ -357,6 +357,8 @@ public class ConcurrentObliviousTree {
                         t.status.get().unassigned.push(newSubTree.getChild(newSubTree.getDegree() - 1));
                         newSubTree.removeChild(newSubTree.getDegree() - 1);
                     }
+                    //Save previous node in descriptor so we can reattach the 
+                    //level links when we replace the old node with our new one
                     
                     //The first thing that must be done is to figure where you
                     //are in the tree based on the currentNode. Do I need to 
