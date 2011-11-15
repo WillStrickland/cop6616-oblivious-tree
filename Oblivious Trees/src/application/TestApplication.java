@@ -12,6 +12,7 @@ import java.security.SecureRandom;
 import java.security.Signature;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 
 import application.Act.OpType;
 
@@ -115,9 +116,11 @@ public class TestApplication {
 	
 	
 	public static void main(String[] args) {
-		
+		testActMethods_scanAct();
+		//testActMethods_scanByteArray();
 	}
 	
+	// Component testing methods
 	/** code for opening file and creating OTree from it 
 	 */
 	private static void testOpenFile(){
@@ -146,7 +149,6 @@ public class TestApplication {
 			System.out.println("Unknown Error");
 		}
 	}
-	
 	/** code for having random threads do random inserts and deletes on a shared oblivious tree
 	 */
 	private static void testRndActions(){
@@ -166,6 +168,68 @@ public class TestApplication {
 			Actors[i].run();
 		}
 	}
+	/** code for testing the instance methods for Act.scanByteArray
+	 */
+	private static void testActMethods_scanAct(){
+		Random rnd = initPRNG();	// Random source
+		byte[] data = new byte[12];
+		rnd.nextBytes(data);
+		Act a1 = new Act();
+		a1.setCallerNm("BLAHS");
+		a1.setOperation(Act.OpType.INSERT);
+		a1.setTime(214214);
+		a1.setLocation(3235);
+		a1.setData(data);
+		String tmp1 = a1.toString();
+		Act a2 = Act.scanAct(new Scanner(tmp1));
+		String tmp2 = a2.toString();
+		if (tmp1.equals(tmp2)){
+			System.out.print("success\n"+tmp1+"\n"+tmp2+"\n");
+		} else {
+			System.out.print("failure\n"+tmp1+"\n"+tmp2+"\n");
+		}
+	}
+	/** code for testing the instance methods for Act.scanByteArray
+	 */
+	private static void testActMethods_scanByteArray(){
+		Random rnd = initPRNG();	// Random source
+		int numRounds = 100000;		// number to rounds to test
+		int maxdata = 1000;		// maximum data size
+		boolean showS = false;	// show successful case output
+		boolean showF = true;	// show failure case output
+		int s=0, f=0; //success and failure count
+		for (int i=0; i<numRounds; i++){
+			byte[] data = null;
+			String tmp1 = null;
+			String tmp2 = null;
+			try{
+				boolean success = false;
+				data = new byte[rnd.nextInt(maxdata)];
+				rnd.nextBytes(data);
+				tmp1 = Arrays.toString(data);
+				tmp2 = Arrays.toString(Act.scanByteArray(new Scanner(tmp1)));
+				// compute success or fail
+				if(tmp1.equals(tmp2)){
+					success = true;
+					s++;
+				} else {
+					f++;
+				} 
+				// display output (conditionally)
+				if (success && showS){
+					System.out.print("success#"+s+"\n"+tmp1+"\n"+tmp2+"\n");
+				} else if (!success && showF){
+					System.out.print("failure#"+f+"\n"+tmp1+"\n"+tmp2+"\n");
+				}
+			} catch (Exception e){
+				// print error state to screen
+				System.out.println("(s="+s+",f="+(f++)+")\tERROR: n="+data.length+" tmp1="+tmp1+" tmp2="+tmp2);
+			}
+		}
+		System.out.print("#successes="+s+" #failures="+f);
+	}
+	
+	
 	
 	// Methods for Actors to perform actions on instance oblivious Tree
 	/** Perform a random action then on instance oblivious tree
