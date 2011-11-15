@@ -3,11 +3,11 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
-import java.util.Vector;
 
 import oblivious.ObliviousTree;
 
@@ -22,7 +22,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	
 	/* Instance Properties */
 	private OTree_Node root;	// root node of tree
-	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
+	private ArrayList<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
 	
 	/** Constructor generates empty initial tree.
 	 */
@@ -34,7 +34,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	public SequentialObliviousTree(FileInputStream file, Signature signer){
 		//1). Instantiate root node
 		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
+		treeNodes = new ArrayList<OTree_Elem>();
 		//2). Generate leaf nodes from the byte array
 		generateLeaves(file, signer);
 		//3). Create Oblivious Tree
@@ -45,7 +45,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	public SequentialObliviousTree(byte[] file, Signature signer){
 		//1). Instantiate root node
 		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
+		treeNodes = new ArrayList<OTree_Elem>();
 		//2). Generate leaf nodes from the byte array
 		generateLeaves(file, signer);
 		//3). Create Oblivious Tree
@@ -122,15 +122,15 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                  * Holds the nodes contained at the previous level. It is 
                  * instantiated with the nodes at the leaf level
                  */
-                Vector<OTree_Elem> previousLevel = treeNodes;
+                ArrayList<OTree_Elem> previousLevel = treeNodes;
                 /*
                  * Holds the nodes being added to the current level.
                  */
-                Vector<OTree_Elem> currentLevel;
+                ArrayList<OTree_Elem> currentLevel;
                 
                 while(previousLevel.size() > 1)
                 {
-                    currentLevel = new Vector<OTree_Elem>();
+                    currentLevel = new ArrayList<OTree_Elem>();
                     numOfNodesAtLevel = previousLevel.size();
                     
                     for(addCount = 0; addCount < numOfNodesAtLevel; addCount += randomDegree)
@@ -163,7 +163,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                         
                         try
                         {
-                            currentLevel.lastElement().setNeighbor(tempNode);
+                            currentLevel.get(currentLevel.size()-1).setNeighbor(tempNode);
                         }
                         catch(NoSuchElementException e)
                         {
@@ -177,7 +177,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                 
                 try
                 {
-                    root = (OTree_Node)previousLevel.firstElement();
+                    root = (OTree_Node)previousLevel.get(0);
                 }
                 catch(NoSuchElementException e)
                 {                    
@@ -600,7 +600,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                     }
                 }
 	
-                treeNodes.removeElementAt(i);
+                treeNodes.remove(i);
                 
                 while(ithParent !=  null)
                 {                
