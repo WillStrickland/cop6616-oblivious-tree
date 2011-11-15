@@ -167,6 +167,10 @@ abstract class OTree_Elem {
 	public OTree_Elem getNeighbor(){
 		return this.neighbor;
 	}
+        
+        public OTree_Elem getPrevNeighbor(){
+            return this.prev_neighbor;
+        }
 	/** return the child at given position of child set.
 	 *  @param i position of child
 	 *  @return child OTree_Elem if child exists else null
