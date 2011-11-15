@@ -183,6 +183,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                         try
                         {
                             currentLevel.lastElement().setNeighbor(tempNode);
+                            tempNode.setPrevNeighbor(currentLevel.lastElement());
                         }
                         catch(NoSuchElementException e)
                         {
@@ -274,7 +275,23 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     parent = (OTree_Node)leaf.getParent();
                     children = parent.getChildren();
                     
-                    newStatus = new DescStatus(DescStatus.StatusType.OPEN);
+                    newSubTree = new OTree_Node();
+                    
+                    for(int transfer1 = 0; transfer1 < children.length; transfer1++)
+                    {
+                        newSubTree.addChild(children[transfer1]);
+                    }
+                    
+                    newLeaf.setSig(t.data.get().get());
+                    newSubTree.addChild(newLeaf);
+                    newLeaf.setParent(newSubTree);
+                    newSubTree.setNeighbor(parent.getNeighbor());
+                    newSubTree.setPrevNeighbor(parent.getPrevNeighbor());
+                    
+                    newStatus = new DescStatus(DescStatus.StatusType.LINK);
+                    newStatus.parent = parent.getParent();
+                    newStatus.currentNode = newSubTree;
+                    //newStatus.previousNode = parent.getPrevNeighbor();
                     
                     if(t.status.compareAndSet(oldStatus, newStatus))
                     {
@@ -282,12 +299,12 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                          * Updates to the tree can ONLY be made by the thread 
                          * that passes the compareAndSet
                          */
-                        newLeaf.setSig(t.data.get().get());
-                        parent.addChild(newLeaf);
-                        newLeaf.setParent(parent);
+                        //newLeaf.setSig(t.data.get().get());
+                        //parent.addChild(newLeaf);
+                        //newLeaf.setParent(parent);
                         
-                        t.status.get().currentNode = parent;
-                        t.status.get().unassigned = new LinkedList<OTree_Elem>();
+                        //t.status.get().currentNode = parent;
+                        //t.status.get().unassigned = new LinkedList<OTree_Elem>();
                         //t.status.get().unassigned.add(children[children.length - 1]);
                     }
                 }
