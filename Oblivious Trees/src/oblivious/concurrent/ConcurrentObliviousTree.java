@@ -257,29 +257,40 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
         public void concurrentInsert(TaskDesc t)
         {
             Random this_rnd = rndSrc.get();
-            int randomDegree;
-            OTree_Leaf leaf, newLeaf = new OTree_Leaf();
-            OTree_Node parent, newSubTree, temp;
-            OTree_Elem[] children;
-            DescStatus oldStatus = t.status.get();
-            DescStatus newStatus;
-            OTree_Node currentNode = (OTree_Node)oldStatus.currentNode;
-            LinkedList<OTree_Elem> unassigned = oldStatus.unassigned;
+            int randomDegree, parentIndex = 0;
+            OTree_Node newSubTree;
+            //DescStatus oldStatus = t.status.get();
+            //OTree_Node currentNode = (OTree_Node)oldStatus.currentNode;
+            //LinkedList<OTree_Elem> unassigned = oldStatus.unassigned;
             OTree_Node neighbor;
             
             while(t.status.get().stage != DescStatus.StatusType.DONE)
             {
                 if(t.status.get().stage == DescStatus.StatusType.NEW)
                 {
-                    leaf = (OTree_Leaf)getNode(t.index);
-                    parent = (OTree_Node)leaf.getParent();
-                    children = parent.getChildren();
+                    OTree_Leaf newLeaf = new OTree_Leaf();
+                    OTree_Leaf leaf = (OTree_Leaf)getNode(t.index);
+                    OTree_Node parent = (OTree_Node)leaf.getParent();
+                    OTree_Elem[] children = parent.getChildren();
+                    OTree_Elem[] parentChildren = parent.getParent().getChildren();
                     
                     newSubTree = new OTree_Node();
                     
                     for(int transfer1 = 0; transfer1 < children.length; transfer1++)
                     {
                         newSubTree.addChild(children[transfer1]);
+                    }
+                    for(int transfer2 = 0; transfer2 < parentChildren.length; transfer2++)
+                    {
+                        if(parent == parentChildren[transfer2])
+                        {
+                            /*
+                             * Here we are fetching the index of the parent
+                             * node we wish to swap out with our new tree.
+                             */
+                            parentIndex = transfer2;
+                            break;
+                        }
                     }
                     
                     newLeaf.setSig(t.data.get().get());
@@ -288,24 +299,18 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     newSubTree.setNeighbor(parent.getNeighbor());
                     newSubTree.setPrevNeighbor(parent.getPrevNeighbor());
                     
-                    newStatus = new DescStatus(DescStatus.StatusType.LINK);
+                    DescStatus newStatus = new DescStatus(DescStatus.StatusType.LINK);
+                    newStatus.index = parentIndex;
                     newStatus.parent = parent.getParent();
                     newStatus.currentNode = newSubTree;
-                    //newStatus.previousNode = parent.getPrevNeighbor();
+                    newStatus.previousNode = parent.getPrevNeighbor();
                     
-                    if(t.status.compareAndSet(oldStatus, newStatus))
+                    if(t.status.compareAndSet(t.status.get(), newStatus))
                     {
                         /*
                          * Updates to the tree can ONLY be made by the thread 
                          * that passes the compareAndSet
                          */
-                        //newLeaf.setSig(t.data.get().get());
-                        //parent.addChild(newLeaf);
-                        //newLeaf.setParent(parent);
-                        
-                        //t.status.get().currentNode = parent;
-                        //t.status.get().unassigned = new LinkedList<OTree_Elem>();
-                        //t.status.get().unassigned.add(children[children.length - 1]);
                     }
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.OPEN)
@@ -314,7 +319,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     //a new subtree to replace whatever the currentNode is
                     
                     newSubTree = new OTree_Node();
-                    children = t.status.get().currentNode.getChildren();
+                    OTree_Elem[] children = t.status.get().currentNode.getChildren();
                     
                     if(t.status.get().unassigned.size() > 0)
                     {
@@ -353,9 +358,9 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     }
                     else
                     {
-                        newStatus = new DescStatus(DescStatus.StatusType.DONE);
+                        DescStatus newStatus = new DescStatus(DescStatus.StatusType.DONE);
                         
-                        if(t.status.compareAndSet(oldStatus, newStatus))
+                        if(t.status.compareAndSet(t.status.get(), newStatus))
                         {
                             
                         }
@@ -363,7 +368,24 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.LINK)
                 {
-                    //Attach proposed subtree that created during the OPEN phase
+                    OTree_Node previousNode = (OTree_Node)t.status.get().previousNode;
+                    OTree_Node currentNode = (OTree_Node)t.status.get().currentNode;
+                    OTree_Node parent = (OTree_Node)t.status.get().parent;
+                    int index = t.status.get().index;
+                    
+                    previousNode.setNeighbor(currentNode);
+                    currentNode.getNeighbor().setPrevNeighbor(currentNode);
+                    currentNode.setParent(parent);
+                    parent.setChild(index, currentNode);
+                    //Attach proposed subtree that created during the NEW or 
+                    //OPEN phase
+                    DescStatus newStatus = new DescStatus(DescStatus.StatusType.OPEN);
+
+                    
+                    if(t.status.compareAndSet(t.status.get(), newStatus))
+                    {
+                        
+                    }
                 }
             };
             
