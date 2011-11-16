@@ -10,7 +10,11 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Signature;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -229,7 +233,177 @@ public class TestApplication {
 		System.out.print("#successes="+s+" #failures="+f);
 	}
 	
-	
+	// Methods for starting up Actors (random and scripted)
+	/** Method to create a specified number of random actors
+	 *  with specified number of actions to take
+	 *  @param actors number of random actors to create
+	 *  @param acts number of random actors are to perform
+	 *  @param useTiming sets the useTiming flag of each actor
+	 *  @return TestActor[] of RandomActor objects
+	 */
+	private TestActor[] castRandomActors(int actors, int acts, boolean useTiming){
+		// create array of actors
+		RandomActor[] Actors = new RandomActor[actors];
+		// Initialize actors
+		for (int i=0; i<Actors.length; i++){
+			Actors[i] = new RandomActor();
+			Actors[i].setActCnt(acts);
+			Actors[i].setTest(this);
+			Actors[i].setUseTiming(useTiming);
+		}
+		// return actor array
+		return Actors;
+	}
+	/** Method to create a specified number of random actors
+	 *  with specified number of actions to take
+	 *  @param acts list of all acts to be performed
+	 *  @param placement map specifying the map of each act to a numbered actor
+	 *  @param useTiming sets the useTiming flag of each actor
+	 *  @return TestActor[] of RandomActor objects
+	 */
+	private TestActor[] castScriptedActors(List<Act> acts, Map<String,Integer> placement, boolean useTiming){
+		// create array of actors
+		ScriptedActor[] Actors = new ScriptedActor[placement.size()];
+		// create list of acts for each actor
+		ArrayList<ArrayList<Act>> ActSets = new ArrayList<ArrayList<Act>>(placement.size());
+		// Initialize first dimension of ActSets
+		for (ArrayList<Act> AL : ActSets){
+			AL = new ArrayList<Act>();
+		}
+		// Iterate all acts and place into correct list for correct actor using placement map
+		for (Act a : acts){
+			ActSets.get(placement.get(a.getCallerNm()).intValue()).add(a);
+		}
+		// Initialize actors
+		for (int i=0; i<Actors.length; i++){
+			Actors[i] = new ScriptedActor();
+			Actors[i].setActions(ActSets.get(i));
+			Actors[i].setTest(this);
+			Actors[i].setUseTiming(useTiming);
+		}
+		// return actors array
+		return Actors;
+	}
+	/** Create a mapping of all unique callers identified in list of
+	 *  Acts to a unique assigned number. Callers are identified by
+	 *  the getCallerNm() string method. Numbering starts at zero 
+	 *  and increments by one for new caller found. Callers are number
+	 *  in the order they occur in the list given by list iterator.
+	 *  @param acts list of all acts to 
+	 *  @return Map<String,Integer> map of unique caller names to unique numbers
+	 */
+	private static Map<String,Integer> getPlacements(List<Act> acts){
+		// set initial actor number
+		int i = 0;
+		// Initialize map of caller name to caller index
+		Map<String,Integer> tmp = new HashMap<String,Integer>();
+		// iterate acts list
+		for (Act a : acts){
+			// if the map does not yet contain this caller
+			if(!tmp.containsKey(a.getCallerNm())){
+				// add the 
+				tmp.put(a.getCallerNm(), Integer.valueOf(i++));
+			}
+		}
+		return tmp;
+	}
+	// Psuedo-serialization methods
+	/** Reads in scanner of previous test output and constructs list
+	 *  of all acts. Utilizes Act.scanAct method to accomplish this.
+	 *  Compatible with writeActors and writeActs methods below.
+	 *  @param txt Scanner holding input
+	 *  @return List of Acts scanned from input
+	 */
+	private static List<Act> scanActs(Scanner txt){
+		ArrayList<Act> alist = new ArrayList<Act>();
+		while (txt.hasNext()){
+			// scan Act from input
+			Act tmp = Act.scanAct(txt);
+			if(tmp!=null){
+				// if success, add to list
+				alist.add(tmp);
+			} else {
+				// else, there was a problem!
+				break;
+			}
+		}
+		// return list
+		return alist;
+	}
+	/** Outputs list of all actions by all actors provided
+	 *  Compatible with scanActs method above
+	 *  @param actors List of actors with actions to output
+	 *  @return String representing list of all Acts from all Actors
+	 */
+	private static String writeActors(List<TestActor> actors){
+		// Initialize temporary text string
+		String txt = new String();
+		// for each actor
+		for(TestActor A : actors){
+			// for each act of that actor
+			for(Act a : A.getActions()){
+				// concatenate this act.toString() onto the
+				// temporary string followed by a newline
+				txt += a.toString() + "\n";
+			}
+		}
+		// return resulting string
+		return txt;
+	}
+	/** Outputs list of all actions by all actors provided
+	 *  Compatible with scanActs method above
+	 *  @param actors array of actors with actions to output
+	 *  @return String representing list of all Acts from all Actors
+	 */
+	private static String writeActors(TestActor[] actors){
+		// Initialize temporary text string
+		String txt = new String();
+		// for each actor
+		for(TestActor A : actors){
+			// for each act of that actor
+			for(Act a : A.getActions()){
+				// concatenate this act.toString() onto the
+				// temporary string followed by a newline
+				txt += a.toString() + "\n";
+			}
+		}
+		// return resulting string
+		return txt;
+	}
+	/** Outputs list of all actions by all actors
+	 *  Compatible with scanActs method above
+	 *  @param acts List<Act> to be outputted
+	 *  @return String representing list of all Acts
+	 */
+	private static String writeActs(List<Act> acts){
+		// Initialize temporary text string
+		String txt = new String();
+		// for each act
+		for(Act a : acts){
+			// concatenate this act.toString() onto the
+			// temporary string followed by a newline
+			txt += a.toString() + "\n";
+		}
+		// return resulting string
+		return txt;
+	}
+	/** Outputs list of all actions provided
+	 *  Compatible with scanActs method above
+	 *  @param acts Act[] to be outputted
+	 *  @return String representing list of all Acts
+	 */
+	private static String writeActs(Act[] acts){
+		// Initialize temporary text string
+		String txt = new String();
+		// for each act
+		for(Act a : acts){
+			// concatenate this act.toString() onto the
+			// temporary string followed by a newline
+			txt += a.toString() + "\n";
+		}
+		// return resulting string
+		return txt;
+	}
 	
 	// Methods for Actors to perform actions on instance oblivious Tree
 	/** Perform a random action then on instance oblivious tree
@@ -288,6 +462,7 @@ public class TestApplication {
 				break;
 		}	
 	}
+	
 	
 
 }
