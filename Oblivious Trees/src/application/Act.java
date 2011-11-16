@@ -3,17 +3,20 @@ package application;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
 
-public class Act implements Cloneable{
+public class Act implements Cloneable, Delayed{
 	
 	// Instance variables
-	private Runnable caller;
-	private String callerNm;
-	private OpType operation;
-	private long time;
-	private int location;
-	private byte[] data;
-	
+	private Runnable caller;	// calling object
+	private String callerNm;	// string name of calling thread/object
+	private OpType operation;	// operation performed
+	private long time;			// time action took place
+	private int location;		// location of insert/delete
+	private byte[] data;		// data that was or will be inserted
+	private long delayEnd;		// time that delay should expire
+
 	public static enum OpType { 
 		INSERT,	// chunk insert operation
 		DELETE,	// chunk delete operation
@@ -112,6 +115,7 @@ public class Act implements Cloneable{
 	 */
 	public void setCaller(Runnable caller) {
 		this.caller = caller;
+		this.callerNm = caller.toString();
 	}
 	/** set Act caller Name
 	 *  does allow whitespace, will remove whitespace
@@ -188,15 +192,15 @@ public class Act implements Cloneable{
 	public byte[] getData() {
 		return data;
 	}
-	
-	// Misc methods
+
+	// Psuedo-serialization methods
 	/** toString method for string representation of Act
 	 *  @return String representation
 	 */
 	public String toString(){
 		return ((caller!=null)?this.caller.toString():this.callerNm)+"\t"+this.time+"\t"+((this.operation!=null)?this.operation.name():"NOOP")+"\t"+this.location+"\t"+Arrays.toString(this.data);
 	}
-	/** method for constructing a new Act 
+	/** Method for constructing a new Act 
 	 *  object from the string representation Compatible
 	 *  with the Act.toString() output, except cannot set 
 	 *  the caller property. Sets callerNm instead.
@@ -270,4 +274,44 @@ public class Act implements Cloneable{
 		tmp.data = Arrays.copyOf(this.data, this.data.length);
 		return tmp;
 	}
+	// Delayed methods
+	/** Start the delay count down, can be called multiple times
+	 *  uses time variable as the amount of delay in milliseconds
+	 */
+	public void setDelayStart(){
+		this.delayEnd = System.currentTimeMillis() + this.time;
+	}
+	/** Start the delay count down, can be called multiple times
+	 *  accepts delay in any TimeUnit
+	 *  @param delay amount of time to delay as long
+	 *  @param unit TimeUnit of given delay
+	 */
+	public void setDelayStart(long delay, TimeUnit unit){
+		this.delayEnd = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(delay, unit);
+	}
+	/** Set exact delay end for a specific system time
+	 * @param exact desired system time in milliseconds (as in System.currentTimeMillis())
+	 */
+	public void setDelayEnd(long timeEnd){
+		this.delayEnd = timeEnd;
+	}
+	
+	/** Comparable compareTo function, 
+	 *  used to implement the Delayed interface 
+	 *  and only the Delayed interface
+	 *  @param o object to be compared, MUST be Act
+	 *  @return int specifying ordering of this and o
+	 */
+	public int compareTo(Delayed o) {
+		long tmp = this.delayEnd - ((Act) o).delayEnd;
+		return (tmp>0) ? 1 : (tmp<0) ? -1: 0;
+	}
+	/** Delayed interface required method
+	 * @param unit TimeUnit to return time in
+	 * @return long in specified TimeUnit till delay expires, negative if already expired
+	 */
+	public long getDelay(TimeUnit unit) {
+		return unit.convert(this.delayEnd-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+	}
+	
 }
