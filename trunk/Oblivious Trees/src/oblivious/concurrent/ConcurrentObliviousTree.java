@@ -298,12 +298,20 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     newLeaf.setParent(newSubTree);
                     newSubTree.setNeighbor(parent.getNeighbor());
                     newSubTree.setPrevNeighbor(parent.getPrevNeighbor());
-                    
+                     
                     DescStatus newStatus = new DescStatus(DescStatus.StatusType.LINK);
+                    
                     newStatus.index = parentIndex;
-                    newStatus.parent = parent.getParent();
+                    newStatus.parent = parent.getParent();                    
+                    newStatus.previousNode = parent.getPrevNeighbor();                                           
+                    newStatus.unassigned = new LinkedList<OTree_Elem>();
+                    newStatus.unassigned.push(newSubTree.getChild(newSubTree.getDegree() - 1));
+                    
+                    newSubTree.removeChild(newSubTree.getDegree() - 1);
                     newStatus.currentNode = newSubTree;
-                    newStatus.previousNode = parent.getPrevNeighbor();
+                    
+                    
+                    randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
                     
                     if(t.status.compareAndSet(t.status.get(), newStatus))
                     {
@@ -373,14 +381,39 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     OTree_Node parent = (OTree_Node)t.status.get().parent;
                     int index = t.status.get().index;
                     
-                    previousNode.setNeighbor(currentNode);
-                    currentNode.getNeighbor().setPrevNeighbor(currentNode);
+                    if(previousNode != null)
+                    {
+                        previousNode.setNeighbor(currentNode);
+                    }
+                    
+                    if(currentNode.getNeighbor() != null)
+                    {
+                        currentNode.setPrevNeighbor(currentNode);
+                    }
+                    
                     currentNode.setParent(parent);
-                    parent.setChild(index, currentNode);
+                    
+                    if(parent != null)
+                    {
+                        parent.setChild(index, currentNode);
+                    }
                     //Attach proposed subtree that created during the NEW or 
                     //OPEN phase
-                    DescStatus newStatus = new DescStatus(DescStatus.StatusType.OPEN);
+                    DescStatus newStatus;
+                                        
+                    if(parent == null)
+                    {
+                        newStatus = new DescStatus(DescStatus.StatusType.DONE);
 
+                    }
+                    else
+                    {
+                        newStatus = new DescStatus(DescStatus.StatusType.OPEN);
+
+                    }
+                    
+                    
+                    
                     
                     if(t.status.compareAndSet(t.status.get(), newStatus))
                     {
