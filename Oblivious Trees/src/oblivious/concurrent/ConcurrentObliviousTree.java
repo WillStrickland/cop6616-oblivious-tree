@@ -409,12 +409,13 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     else
                     {
                         newStatus = new DescStatus(DescStatus.StatusType.OPEN);
+                        newStatus.unassigned = t.status.get().unassigned;
 
                     }
                     
-                    
-                    
-                    
+                    /*
+                     * Needs More Stuff
+                     */
                     if(t.status.compareAndSet(t.status.get(), newStatus))
                     {
                         
