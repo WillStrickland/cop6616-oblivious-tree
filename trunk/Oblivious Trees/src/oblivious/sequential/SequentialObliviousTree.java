@@ -184,18 +184,16 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                 }
         }
         
-        /**
-         * 
-         * @param byte[] value
-         * @param int i
-         * @param Signature signer
-         * @return void
-         * 
-         * Inserts a new leaf into the ith position of the leaf level, then
-         * re-randomized the tree based on the optimized insert algorithm
-         * presented.
+        /** Inserts a new leaf into the ith position of the leaf level, then
+         *  re-randomized the tree based on the optimized insert algorithm
+         *  presented in the paper. In order to insert a new node, you must 
+         *  provide data (in the form of a byte array) and a position.
+         *  @param byte[] value data value to be inserted
+         *  @param int i index of chunk/leaf to insert into
+         *  @param Signature signer signature for signing new/randomized tree nodes.
+         *  @return void
          */
-        public synchronized void newInsert(byte[] value, int i, Signature signer)
+        public synchronized void insert(byte[] value, int i, Signature signer)
         {
             i = i - 1;
             OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
@@ -316,7 +314,14 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             }            
         }
         
-        public synchronized void newDelete(int i)
+        /** deletes the leaf the ith position of the leaf level, then
+         *  re-randomized the tree based on the optimized delete algorithm
+         *  presented in the paper. In order to delete a node, you must provide a position.
+         *  @param int i index of chunk/leaf to insert into
+         *  @param Signature signer signature for signing new/randomized tree nodes.
+         *  @return void
+         */
+        public synchronized void delete(int i,  Signature signer)
         {
             i = i - 1;
             OTree_Elem ithChild = treeNodes.get(i);
@@ -388,308 +393,8 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             }
             
         }
-	
-	/** In order to insert a new node, you must provide data (in the form of
-	 *  a byte array) and a position. You want to insert the value into 
-	 *  position i.
-	 *  @param value value to be inserted
-	 *  @param i index of chunk/leaf to insert into
-         * @param Signature Object
-	 *  @return void
-	 */
-	public synchronized void insert(byte[] value, int i, Signature signer)
-	{
-		/*
-		 * Create a new leaf node based on the new data
-		 */
-		int w, randomDegree, level = 0, childRemoveCount;
-		int maxLeaves = treeNodes.size();
-		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
-		OTree_Leaf newLeaf = new OTree_Leaf();
-		newLeaf.setSig(value);
-		/*
-		 * Fetch the current ith (zero-aligned) leaf node
-		 */
-		OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
-		/*
-		 * Get the parent of the current ith node
-		 */
-		parent = ithParent = (OTree_Node)iThLeaf.getParent();
-		/*
-		 * Insert the new ith node into the ith (zero-aligned) position
-		 */
-		treeNodes.add((i-1), newLeaf);
-
-                /*
-                 * Figure out what our level is by traversing the tree up to the
-                 * root. We need to know the level so we can fetch the level
-                 * neighbor. Ugh, this is so inefficient.
-                 */
-                while(parent != null)
-                {
-                    parent = (OTree_Node)parent.getParent();
-                    level++;
-                }
-                
-                if(rndSrc.nextBoolean())
-                {
-                        randomDegree = 2;
-                }
-                else
-                {
-                        randomDegree = 3;
-                }
-                /*
-                 * We must traverse up the tree and perform the randomization
-                 * procedure for every node that is along the path between the
-                 * root and the leaf node the user wanted to add.
-                 */
-                while(ithParent != null)
-                {
-                    /*
-                     * We can skip straight to step 3 (which is after the if 
-                     * statement) of the paper's description of the insert function 
-                     * if the leaf's parent is both the LAST node of its level AND 
-                     * its either got a degree of 3 OR the random degree we chose 
-                     * above is equal to 3.
-                     */
-                    if(!((this.getNeighbor(ithParent, level) == null) && (ithParent.getDegree() == 3 || randomDegree == 3)))
-                    {
-                        /*
-                         * If the above condition is not met, we initialize a 
-                         * variable w to 1.
-                         */
-                        w = 1; 
-                        
-                        while(w != 0)
-                        {
-                            /*
-                             * If the node we are on the last node of its level,
-                             * then insert a new node and set its degree to w.
-                             * Make the last w children of the current node the 
-                             * next w children of the newly inserted node.
-                             * 
-                             * If we are not on the last node of the level,
-                             * (which means we are still propogating
-                             * through the level), then find the level 
-                             * neighbor of the current, and set the last w 
-                             * children of the current node to the first w
-                             * children of the neighbor.
-                             */
-                            ithTemp = ithParent;
-                            
-                            if(rndSrc.nextBoolean())
-                            {
-                                    randomDegree = 2;
-                            }
-                            else
-                            {
-                                    randomDegree = 3;
-                            }
-                            
-                            if((randomDegree == w) || (this.getNeighbor(ithTemp, level) == null))
-                            {
-                                if(ithTemp.getParent().getDegree() == 2)
-                                {
-                                    OTree_Node newChild = new OTree_Node();
-                                    ithTemp.getParent().addChild(newChild);
-                                    
-                                    childRemoveCount = 0;
-                                    
-                                    while(childRemoveCount < w)
-                                    {
-                                        newChild.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
-                                        ithTemp.removeChild(ithTemp.getDegree() - 1);
-                                        childRemoveCount++;
-                                    }
-                                }
-                                else
-                                {
-                                    parent = (OTree_Node)ithTemp.getParent();
-                                    
-                                    while(parent != null)
-                                    {
-                                        if(parent.getDegree() == 2)
-                                        {
-                                            OTree_Node newChild = new OTree_Node();
-                                            parent.addChild(newChild);
-
-                                            childRemoveCount = 0;
-
-                                            while(childRemoveCount < w)
-                                            {
-                                                newChild.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
-                                                ithTemp.removeChild(ithTemp.getDegree() - 1);
-                                                childRemoveCount++;
-                                            }
-                                            
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            parent = (OTree_Node)parent.getParent();
-                                        }
-                                    }                                                                        
-                                }
-                                
-                                w = 0;
-                            }
-                            else
-                            {
-                                ithTemp = this.getNeighbor(ithParent, level);
-                                int t = ithTemp.getDegree();
-                                
-                                childRemoveCount = 0;
-
-                                while(childRemoveCount < w)
-                                {
-                                    ithTemp.addChild(ithParent.getChild(ithParent.getDegree() - 1));
-                                    ithParent.removeChild(ithParent.getDegree() - 1);
-                                    childRemoveCount++;
-                                }
-                                
-                                w = java.lang.Math.max(0, t + w - randomDegree);                                                                                                
-                            }
-                        }
-                        
-                    }
-                    
-                    //MUST RECOMPUTE SIZE FIELDS
-                    //Also recomputer the size fields of the parent of the leaf
-                    //node to its level neighbor.
-                    
-                    ithParent = (OTree_Node)ithParent.getParent();
-                    level--;
-                }
-	}
-	//
         
-        public synchronized void delete(int i, Signature signer)
-	{
-                /*
-		 * Create a new leaf node based on the new data
-		 */
-		int w, randomDegree, level = 0, childRemoveCount, t;
-		int maxLeaves = treeNodes.size();
-		OTree_Node tempNode, sibling, ithParent, parent, ithTemp;
-                OTree_Elem[] children;
-                
-                /*
-		 * Fetch the current ith (zero-aligned) leaf node
-		 */
-		OTree_Leaf iThLeaf = (OTree_Leaf)treeNodes.get((i - 1));
-		/*
-		 * Get the children of the parent of the ith leaf, so we can 
-                 * delete the given child before removing it from the Vector
-		 */
-		children = iThLeaf.getParent().getChildren();
-                ithParent = parent =(OTree_Node)iThLeaf.getParent();
-                
-                while(parent != null)
-                {
-                    level++;
-                    parent = (OTree_Node)parent.getParent();
-                }
-                
-                for(int cnt = 0; cnt < children.length; cnt++)
-                {
-                    if(iThLeaf.getParent().getChild(cnt) == iThLeaf)
-                    {
-                        iThLeaf.getParent().removeChild(cnt);
-                        break;
-                    }
-                }
-	
-                treeNodes.remove(i);
-                
-                while(ithParent !=  null)
-                {                
-                    if(this.getNeighbor(ithParent, level) == null)
-                    {
-                        if(ithParent.getChildren() == null)
-                        {
-                            ithTemp = ithParent;
-                            ithParent = (OTree_Node)ithParent.getParent();
-                        }
-                        else
-                        {
-                            /*
-                             * if the node is the root or below it, recompute
-                             * the size information for all the nodes along the
-                             * path. Else, delete the current root and makes
-                             * its child along the path new root.
-                             */
-                            
-                            root = ithParent;
-                        }
-                    }
-                    else
-                    {
-                        w = 1;
-                        
-                        while(w != 0)
-                        {
-                            ithTemp = ithParent;
-                            
-                            if(rndSrc.nextBoolean())
-                            {
-                                randomDegree = 2;
-                            }
-                            else
-                            {
-                                randomDegree = 3;
-                            }
-                            
-                            ithParent = this.getNeighbor(ithTemp, level);
-                            
-                            t = ithParent.getDegree();
-                            
-                            if(w >= t)
-                            {
-                                childRemoveCount = 0;
-                                
-                                while(childRemoveCount < w)
-                                {
-                                    ithParent.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
-                                    ithTemp.removeChild(ithTemp.getDegree() - 1);
-                                    childRemoveCount++;
-                                }
-                                
-                            }
-                            else
-                            {                                                            
-                                if(rndSrc.nextBoolean())
-                                {
-                                    randomDegree = 2;
-                                }
-                                else
-                                {
-                                    randomDegree = 3;
-                                }
-                                
-                                childRemoveCount = 0;
-
-                                while(childRemoveCount < w)
-                                {
-                                    ithParent.addChild(ithTemp.getChild(ithTemp.getDegree() - 1));
-                                    ithTemp.removeChild(ithTemp.getDegree() - 1);
-                                    childRemoveCount++;
-                                }
-                                
-                                w = java.lang.Math.max(0, t + w - randomDegree);
-                            }
-                            
-                            //--??
-                        }
-                    }
-                    
-                    ithParent = (OTree_Node)ithParent.getParent();
-                }
-                
-	} //*/
-        
-        /*
-         * Updates the size information of all nodes along the path from the root
+        /**Updates the size information of all nodes along the path from the root
          * to the leaf node i
          */
         public synchronized void updateSizes(int i)
