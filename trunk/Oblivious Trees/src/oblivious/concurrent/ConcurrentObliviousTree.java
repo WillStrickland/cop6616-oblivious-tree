@@ -345,6 +345,23 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     }
                     
                     randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
+                    DescStatus newStatus = new DescStatus(DescStatus.StatusType.LINK);
+                    
+                    if(randomDegree == newSubTree.getDegree())
+                    {
+                        /*
+                         * Structure synchronized. Stop here for this level
+                         * and go up to the next level.
+                         */
+                        newStatus.currentNode = t.status.get().parent.getParent();
+                        newStatus.previousNode = newStatus.currentNode.getPrevNeighbor();
+                        newStatus.parent = newStatus.currentNode.getParent();
+                        
+                    }
+                    else
+                    {
+                        
+                    }
                     
                     for(int transfer3 = 0; transfer3 < randomDegree; transfer3++)
                     {
@@ -366,7 +383,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     }
                     else
                     {
-                        DescStatus newStatus = new DescStatus(DescStatus.StatusType.DONE);
+                        //DescStatus newStatus = new DescStatus(DescStatus.StatusType.DONE);
                         
                         if(t.status.compareAndSet(t.status.get(), newStatus))
                         {
