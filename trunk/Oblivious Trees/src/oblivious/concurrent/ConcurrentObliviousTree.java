@@ -111,7 +111,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 			for(int i=0; i<file.length; i+=this_size){
 				OTree_Leaf newLeaf = new OTree_Leaf();
 				this_size = (file.length-i>ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : file.length-i;
-				signer.update(file, 0, this_size);
+				signer.update(file, i, this_size);
 				newLeaf.setSig(signer.sign());
 				tmp.add(newLeaf);
 			}

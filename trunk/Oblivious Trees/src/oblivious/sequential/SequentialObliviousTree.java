@@ -95,7 +95,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 			for(int i=0; i<file.length; i+=this_size){
 				OTree_Leaf newLeaf = new OTree_Leaf();
 				this_size = (file.length-i>ObliviousTree.CHUNK_SIZE) ? ObliviousTree.CHUNK_SIZE : file.length-i;
-				signer.update(file, 0, this_size);
+				signer.update(file, i, this_size);
 				newLeaf.setSig(signer.sign());
 				treeNodes.add(newLeaf);
 			}
@@ -120,6 +120,10 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 		// using a do while will not allow a tree that consists of only a single leaf
 		// will instead have a single internal node root with a single child leaf
 		do {
+			
+			// try a verify
+			//System.out.println(previousLevel+"\t verify="+SequentialObliviousTree.verifySig(previousLevel, tmpVf));
+			
 			// create new level list
 			currentLevel = new ArrayList<OTree_Elem>();
 			// iterate previous level and assign all nodes to a parent
@@ -163,7 +167,10 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             int w, randomDegree, oldDegree;
             ArrayList<OTree_Elem> toUpdate = new ArrayList<OTree_Elem>();
             
-            newLeaf.setSig(value);
+            try{
+                 signer.update(value);
+                 newLeaf.setSig(signer.sign());
+            } catch (Exception e){}
             ithParent.addChild(newLeaf);
             newLeaf.setParent(ithParent);
             treeNodes.add(i, newLeaf);
@@ -645,4 +652,5 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 		}
 		
 	}
+	
 }

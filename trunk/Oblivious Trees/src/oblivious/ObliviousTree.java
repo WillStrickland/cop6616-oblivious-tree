@@ -122,7 +122,7 @@ public abstract class ObliviousTree {
 		if (!verifier.verify(tmp)){
 			throw new GeneralSecurityException();
 		}
-		// 
+		// return current data value to parent node to concatenate
 		return tmp;
 	}
 	

@@ -209,7 +209,7 @@ public class TestApplication {
 		
 	}
 	
-	/** MUSTRUN code for testing the instance methods for Act.scanByteArray
+	/** FAILING code for testing the instance methods for Act.scanByteArray
 	 */
 	private static void testObliviousMethods(){
 		int action_count = 10; // number of actions to perform
@@ -217,19 +217,28 @@ public class TestApplication {
 		boolean showF = true;	// show failure case output
 		// generate test instance
 		TestApplication test = new TestApplication(10, "iamtheverymodelofamodernmajorgeneral");
+		
 		// test to make sure oblivious tree created valid
-		boolean valid = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
-		System.out.println("0\tTreeCreate\t - Valid="+valid);
+		System.out.println("0\tTreeCreate\t-"+
+				"\tValid="+test.tree.verifyTree(test.signatures[1])+
+				"\tVerfifed="+ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]));
 		// for specified number of actions
 		for (int i=0; i<action_count; i++){
 			// perform a random action
 			Act tmp = test.buttonMash();
 			// check to make sure that the tree is still valid
-			valid = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
-			if (valid && showS){
-				//System.out.println(i+"\t"+tmp.getOperation()+" - Valid="+valid+"\t"+tmp);
-			} else if (!valid && showF){
-				System.out.println(i+"\t"+tmp.getOperation()+" - Valid="+valid+"\t"+tmp);
+			boolean valid = test.tree.verifyTree(test.signatures[1]);
+			boolean verfied = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
+			if (valid && verfied && showS){
+				System.out.println(i+"\t"+tmp.getOperation()+"\t-"+
+						"\tValid="+test.tree.verifyTree(test.signatures[1])+
+						"\tVerfifed="+ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1])+
+						"\tAct={"+tmp+"}\n");
+			} else if ((!valid || !verfied) && showF){
+				System.out.println(i+"\t"+tmp.getOperation()+"\t-"+
+						"\tValid="+test.tree.verifyTree(test.signatures[1])+
+						"\tVerfifed="+ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1])+
+						"\tAct={"+tmp+"}\n");
 				//break;
 			}
 		}
