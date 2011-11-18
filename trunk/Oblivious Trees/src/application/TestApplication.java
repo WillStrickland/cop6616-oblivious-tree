@@ -138,7 +138,8 @@ public class TestApplication {
 		//TestAppIO.testActMethods_scanAct();
 		//TestAppIO.testActMethods_scanByteArray();
 		//testObliviousMethods();
-		randomTests(true);
+		//randomTests(false);
+		scriptedTests(false);
 	}
 	/** driver method for running multiple random tests to generate 
 	 */
@@ -155,9 +156,9 @@ public class TestApplication {
 		//treeSizes.add(Integer.valueOf(10000));
 		// set actor counts
 		List<Integer> actorCnts = new ArrayList<Integer>();
-		actorCnts.add(Integer.valueOf(1));
-		actorCnts.add(Integer.valueOf(2));
-		actorCnts.add(Integer.valueOf(4));
+		//actorCnts.add(Integer.valueOf(1));
+		//actorCnts.add(Integer.valueOf(2));
+		//actorCnts.add(Integer.valueOf(4));
 		actorCnts.add(Integer.valueOf(8));
 		//actorCnts.add(Integer.valueOf(16));
 		//actorCnts.add(Integer.valueOf(32));
@@ -165,12 +166,12 @@ public class TestApplication {
 		List<Integer> actionCnts = new ArrayList<Integer>();
 		//actionCnts.add(Integer.valueOf(1));
 		//actionCnts.add(Integer.valueOf(5));
-		actionCnts.add(Integer.valueOf(10));
+		//actionCnts.add(Integer.valueOf(10));
 		actionCnts.add(Integer.valueOf(25));
 		//actionCnts.add(Integer.valueOf(50));
 		//actionCnts.add(Integer.valueOf(100));
 		// set number of trials to do with each configuration
-		int trials = 3;
+		int trials = 1;
 		// in case summary, create single output file
 		BufferedWriter summaryOut = null;
 		if (summary){
@@ -215,8 +216,8 @@ public class TestApplication {
 	private static void scriptedTests(boolean summary){
 		// set input file names
 		List<String> files = new ArrayList<String>();
-		files.add("testlog1.txt");
-		int treeSize = 100;
+		files.add("testlog_1000_8_25_0.txt");
+		files.add("testlog_5000_8_25_0.txt");
 		int trials = 3;
 		// in case summary, create single output file
 		BufferedWriter summaryOut = null;
@@ -228,8 +229,9 @@ public class TestApplication {
 		// Run every configuration for set number of trials
 		for(String fn : files){
 			for(int i=0; i<trials; i++){
+				// determine tree size from file name (because I short on time)
+				int treeSize = (Integer.decode(fn.substring(fn.indexOf('_')+1, fn.indexOf('_', fn.indexOf('_')+1)))).intValue();
 				// create new test instance
-
 				TestApplication test = new TestApplication(treeSize,fn);							
 				// make actors and actions
 				TestActor[] actors = test.mkScriptedActors(fn, false);
