@@ -201,8 +201,9 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
             OTree_Node currentNode, newNode, newRoot, neighbor;
             int w, randomDegree, oldDegree;
+            ArrayList<OTree_Elem> toUpdate = new ArrayList<OTree_Elem>();
             
-            newLeaf.setSig(value);            
+            newLeaf.setSig(value);
             ithParent.addChild(newLeaf);
             newLeaf.setParent(ithParent);
             treeNodes.add(i, newLeaf);
@@ -247,7 +248,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                          * from the leaf to the root.
                          */
                     }
-
+                    
                 }
                 else
                 {
@@ -294,7 +295,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                                 currentNode.getChild(currentNode.getDegree() - 1).setParent(neighbor);
                                 currentNode.removeChild(currentNode.getDegree() - 1);
                             }
-
+                            
                             /*
                              * Take the original degree of the node, add however
                              * many nodes you added to it, and subtract it by 
@@ -305,13 +306,15 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                              * roll a new degree of 3, then you'll wind up with
                              * an extra node floating around. So you have to 
                              * keep going.
-                             */                        
+                             */
                             w = java.lang.Math.max(0, ((oldDegree + w) - randomDegree));
-                            currentNode = neighbor;                            
-                        }                                                
+                            currentNode = neighbor;
+                        }
                     }
                 }
-            }            
+            }
+            // update signatures of all nodes touched in this operation
+            updateSig(toUpdate, signer);
         }
         
         /** deletes the leaf the ith position of the leaf level, then
@@ -327,8 +330,9 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             OTree_Elem ithChild = treeNodes.get(i);
             OTree_Elem[] ithParentChildren;
             OTree_Node ithParent = (OTree_Node)ithChild.getParent();
-            OTree_Node currentNode, newNode, newRoot, neighbor;
-            int w, randomDegree, oldDegree;                        
+            OTree_Node currentNode, neighbor;
+            int w, randomDegree, oldDegree;
+            ArrayList<OTree_Elem> toUpdate = new ArrayList<OTree_Elem>();
             
             while(ithParent.getParent() != null)
             {
@@ -352,7 +356,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                     }
                 }
                 else
-                {                    
+                {
                     w = 1;
                     
                     while(w > 0)
@@ -391,21 +395,11 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                 ithChild = ithParent;
                 ithParent = (OTree_Node)ithParent.getParent();
             }
-            
+            // update signatures of all nodes touched in this operation
+            updateSig(toUpdate, signer);
         }
         
-        /**Updates the size information of all nodes along the path from the root
-         * to the leaf node i
-         */
-        public synchronized void updateSizes(int i)
-        {
-            
-        }
-        
-        public synchronized void updateHashes(int i)
-        {
-            
-        }
+
         
         /**
          * Returns either the node following the given node at its given level

@@ -31,7 +31,6 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	
 	/* Instance Properties */
 	private OTree_Node root;	// root node of tree
-	private Vector<OTree_Elem> treeNodes;	// list of nodes and leaves for rapid access
 	private AtomicReference<TaskDesc> curTask;	// current task to be completed
 	private ConcurrentLinkedQueue<TaskDesc> taskQueue;	// queue of pending tasks
 	
@@ -48,7 +47,6 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	public ConcurrentObliviousTree(FileInputStream file, Signature signer){
 		//1). Instantiate root node
 		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
 		//2). Create Oblivious Tree
 		create(generateLeaves(file, signer),signer);
 		// initialize task queue system
@@ -60,7 +58,6 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	public ConcurrentObliviousTree(byte[] file, Signature signer){
 		//1). Instantiate root node
 		root = new OTree_Node();
-		treeNodes = new Vector<OTree_Elem>();
 		//2). Create Oblivious Tree
 		create(generateLeaves(file, signer),signer);
 		// initialize task queue system
@@ -460,7 +457,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
             
         }
         
-        /**
+        /*
          * 
          * @param byte[] value
          * @param int i
@@ -470,11 +467,12 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
          * Inserts a new leaf into the ith position of the leaf level, then
          * re-randomized the tree based on the optimized insert algorithm
          * presented.
-         */
+         */ //
         public synchronized void newInsert(byte[] value, int i, Signature signer)
         {
             Random this_rnd = rndSrc.get();
             i = i - 1;
+            Vector<OTree_Elem> treeNodes = new Vector<OTree_Elem>();
             OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
             OTree_Leaf newLeaf = new OTree_Leaf();
             OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
@@ -591,12 +589,13 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     }
                 }
             }            
-        }
-        
+        } //*/
+        //
         public synchronized void newDelete(int i)
         {
             Random this_rnd = rndSrc.get();
             i = i - 1;
+            Vector<OTree_Elem> treeNodes = new Vector<OTree_Elem>();
             OTree_Elem ithChild = treeNodes.get(i);
             OTree_Elem[] ithParentChildren;
             OTree_Node ithParent = (OTree_Node)ithChild.getParent();
@@ -665,7 +664,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                 ithParent = (OTree_Node)ithParent.getParent();
             }
             
-        }
+        }//*/
 	
 	/** 
          *  Insert acts a front end for the actual insert function. Insert()
@@ -834,8 +833,8 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	 * @return int count of leafnodes/chunks in oblivious tree
 	 */
 	public synchronized int getSize(){
-		//return root.getLeafCnt();		// tree version
-		return this.treeNodes.size();	// vector version
+		return root.getLeafCnt();		// tree version
+		//return this.treeNodes.size();	// vector version
 	}
 	
 	/** Update the signature for all the OTree_Elem in list.
