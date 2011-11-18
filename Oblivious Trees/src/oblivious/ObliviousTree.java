@@ -8,7 +8,6 @@ import java.security.Signature;
 import java.util.Arrays;
 import java.util.Random;
 
-import oblivious.sequential.OTree_Elem;
 
 /** Oblivious Tree - COP 6616
  * @author William Strickland and Chris Fontaine
