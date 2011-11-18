@@ -138,8 +138,8 @@ public class TestApplication {
 		//TestAppIO.testActMethods_scanAct();
 		//TestAppIO.testActMethods_scanByteArray();
 		//testObliviousMethods();
-		//randomTests(false);
-		scriptedTests(false);
+		randomTests(false);
+		//scriptedTests(false);
 	}
 	/** driver method for running multiple random tests to generate 
 	 */
@@ -502,7 +502,7 @@ public class TestApplication {
 			a.setData(chunk);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do insert
-			//this.tree.insert(chunk, i, this.signatures[0]);
+			this.tree.insert(chunk, i, this.signatures[0]);
 		} else if (act>=5 && act<=9){
 			// position to insert
 			int i = this.rnd.nextInt(this.tree.getSize()+1);
@@ -511,7 +511,7 @@ public class TestApplication {
 			a.setLocation(i);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do delete
-			//this.tree.delete(i, this.signatures[0]);
+			this.tree.delete(i, this.signatures[0]);
 		} else if (act>=10 && act<=10){
 			// set act parameters
 			a.setOperation(OpType.GENSIG);
