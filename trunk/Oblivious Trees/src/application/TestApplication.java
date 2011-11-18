@@ -2,11 +2,13 @@ package application;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Writer;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -87,8 +89,8 @@ public class TestApplication {
 		// set start time
 		startTime = System.currentTimeMillis();
 	}
-	/** Initialize psuedorandom number generator
-	 *  @return new psuedorandom number generator, null if error
+	/** Initialize psuedo-random number generator
+	 *  @return new psuedo-random number generator, null if error
 	 */
 	public static Random initPRNG(){	
 		Random tmp;
@@ -125,41 +127,14 @@ public class TestApplication {
 		return sig;
 	}	
 	
-	
+	// main test driver method
 	public static void main(String[] args) {
+		//TestAppIO.testActMethods_scanAct();
+		//TestAppIO.testActMethods_scanByteArray();
 		testObliviousMethods();
-		//testActMethods_scanByteArray();
 	}
 	
 	// Component testing methods
-	/** code for opening file and creating OTree from it 
-	 */
-	private static void testOpenFile(){
-		// file to be signed
-		FileInputStream file;
-		String filename = "NONE";
-		// open file based on user input
-		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-			System.out.print("Enter file name: ");
-			filename = reader.readLine();
-			System.out.println("Opening "+filename);
-			file = new FileInputStream(filename);
-			
-			
-			//ObliviousTree OT = new ObliviousTree(file);
-			
-			
-			System.out.println("Closing file");
-			file.close();
-		} catch (FileNotFoundException e){
-			System.out.println("could not open file - "+filename);
-		} catch (IOException e){
-			System.out.println("General IO Error - "+filename);
-		} catch (Exception e){
-			System.out.println("Unknown Error");
-		}
-	}
 	/** code for having random threads do random inserts and deletes on a shared oblivious tree
 	 */
 	private static void testRndActors(String outFileName){
@@ -168,18 +143,18 @@ public class TestApplication {
 		int actor_actions = 10;
 		// generate test instance
 		TestApplication test = new TestApplication(1000, outFileName);
-		// initalize actors
-		RandomActor[] Actors = new RandomActor[actor_count];
-		for (int i=0; i<Actors.length; i++){
-			Actors[i] = new RandomActor();
-			Actors[i].setActCnt(actor_actions);
-			Actors[i].setTest(test);
+		// initialize actors
+		RandomActor[] actorslist = new RandomActor[actor_count];
+		for (int i=0; i<actorslist.length; i++){
+			actorslist[i] = new RandomActor();
+			actorslist[i].setActCnt(actor_actions);
+			actorslist[i].setTest(test);
 		}
 		// record start time
 		long startTime = System.currentTimeMillis();
 		// start actors running
-		test.ActorCnt.set(Actors.length);
-		for(TestActor a : Actors){
+		test.ActorCnt.set(actorslist.length);
+		for(TestActor a : actorslist){
 			a.run();
 		}
 		// wait until all actors have completed
@@ -191,122 +166,41 @@ public class TestApplication {
 		// record end time
 		long endTime = System.currentTimeMillis();
 		// gather up results and write out to file
-		try {
-			// open/create file
-			BufferedWriter output = new BufferedWriter(new FileWriter(test.outFile));
-			// output runtime (in milliseconds)
-			output.write(endTime-startTime+"\n");
-			// output all actions by all actors
-			for (TestActor actor : Actors){
-				for (Act a : actor.actions){
-					output.write(a.toString());
-				}
-			}
-
-			// close file
-			output.close();
-		} catch (Exception e){}
-		
+		TestAppIO.writeLogFile(test.outFile, test.tree.getSize(), endTime-startTime, actorslist);
 	}
-	
 	/** FAILING code for testing the instance methods for Act.scanByteArray
 	 */
 	private static void testObliviousMethods(){
 		int action_count = 10; // number of actions to perform
-		boolean showS = true;	// show successful case output
-		boolean showF = true;	// show failure case output
+		boolean showS = true;	// show successful output
+		boolean showF = true;	// show failure output
 		// generate test instance
-		TestApplication test = new TestApplication(10, "iamtheverymodelofamodernmajorgeneral");
-		
+		TestApplication test = new TestApplication(10001, "testfile1");
 		// test to make sure oblivious tree created valid
-		System.out.println("0\tTreeCreate\t-"+
-				"\tValid="+test.tree.verifyTree(test.signatures[1])+
-				"\tVerfifed="+ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]));
+		boolean valid = test.tree.verifyTree(test.signatures[1]);
+		boolean verified = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
+		System.out.println("0\tCREATE\t-"+"\tValid="+valid+"\tVerified="+verified);
 		// for specified number of actions
 		for (int i=0; i<action_count; i++){
 			// perform a random action
 			Act tmp = test.buttonMash();
 			// check to make sure that the tree is still valid
-			boolean valid = test.tree.verifyTree(test.signatures[1]);
-			boolean verfied = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
-			if (valid && verfied && showS){
-				System.out.println(i+"\t"+tmp.getOperation()+"\t-"+
-						"\tValid="+test.tree.verifyTree(test.signatures[1])+
-						"\tVerfifed="+ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1])+
-						"\tAct={"+tmp+"}\n");
-			} else if ((!valid || !verfied) && showF){
-				System.out.println(i+"\t"+tmp.getOperation()+"\t-"+
-						"\tValid="+test.tree.verifyTree(test.signatures[1])+
-						"\tVerfifed="+ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1])+
-						"\tAct={"+tmp+"}\n");
-				//break;
+			valid = test.tree.verifyTree(test.signatures[1]);
+			verified = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
+			// if was success and showing successes
+			if (valid && verified && showS){
+				// print details to screen
+				System.out.println((i+1)+"\t"+tmp.getOperation()+"\t-"+"\tValid="+valid+"\tVerified="+verified+"\tAct={"+tmp+"}");
+			}
+			// if was failure and showing failures
+			else if ((!valid || !verified) && showF){
+				// print details to screen
+				System.out.println((i+1)+"\t"+tmp.getOperation()+"\t-"+"\tValid="+valid+"\tVerified="+verified+"\tAct={"+tmp+"}");
+				//break; // exit out of loop
 			}
 		}
-		
-		
-		
 	}
 	
-	/** SUCCESSFUL code for testing the instance methods for Act.scanByteArray
-	 */
-	private static void testActMethods_scanAct(){
-		Random rnd = initPRNG();	// Random source
-		byte[] data = new byte[12];
-		rnd.nextBytes(data);
-		Act a1 = new Act();
-		a1.setCallerNm("BLAHS");
-		a1.setOperation(Act.OpType.INSERT);
-		a1.setTime(214214);
-		a1.setLocation(3235);
-		a1.setData(data);
-		String tmp1 = a1.toString();
-		Act a2 = Act.scanAct(new Scanner(tmp1));
-		String tmp2 = a2.toString();
-		if (tmp1.equals(tmp2)){
-			System.out.print("success\n"+tmp1+"\n"+tmp2+"\n");
-		} else {
-			System.out.print("failure\n"+tmp1+"\n"+tmp2+"\n");
-		}
-	}
-	/** SUCCESSFUL code for testing the instance methods for Act.scanByteArray
-	 */
-	private static void testActMethods_scanByteArray(){
-		Random rnd = initPRNG();	// Random source
-		int numRounds = 100000;		// number to rounds to test
-		int maxdata = 1000;		// maximum data size
-		boolean showS = false;	// show successful case output
-		boolean showF = true;	// show failure case output
-		int s=0, f=0; //success and failure count
-		for (int i=0; i<numRounds; i++){
-			byte[] data = null;
-			String tmp1 = null;
-			String tmp2 = null;
-			try{
-				boolean success = false;
-				data = new byte[rnd.nextInt(maxdata)];
-				rnd.nextBytes(data);
-				tmp1 = Arrays.toString(data);
-				tmp2 = Arrays.toString(Act.scanByteArray(new Scanner(tmp1)));
-				// compute success or fail
-				if(tmp1.equals(tmp2)){
-					success = true;
-					s++;
-				} else {
-					f++;
-				} 
-				// display output (conditionally)
-				if (success && showS){
-					System.out.print("success#"+s+"\n"+tmp1+"\n"+tmp2+"\n");
-				} else if (!success && showF){
-					System.out.print("failure#"+f+"\n"+tmp1+"\n"+tmp2+"\n");
-				}
-			} catch (Exception e){
-				// print error state to screen
-				System.out.println("(s="+s+",f="+(f++)+")\tERROR: n="+data.length+" tmp1="+tmp1+" tmp2="+tmp2);
-			}
-		}
-		System.out.print("#successes="+s+" #failures="+f);
-	}
 	
 	// Methods for starting up Actors (random and scripted)
 	/** Method to create a specified number of random actors
@@ -316,7 +210,7 @@ public class TestApplication {
 	 *  @param useTiming sets the useTiming flag of each actor
 	 *  @return TestActor[] of RandomActor objects
 	 */
-	private TestActor[] castRandomActors(int actors, int acts, boolean useTiming){
+	private TestActor[] mkRandomActors(int actors, int acts, boolean useTiming){
 		// create array of actors
 		RandomActor[] Actors = new RandomActor[actors];
 		// Initialize actors
@@ -336,7 +230,9 @@ public class TestApplication {
 	 *  @param useTiming sets the useTiming flag of each actor
 	 *  @return TestActor[] of RandomActor objects
 	 */
-	private TestActor[] castScriptedActors(List<Act> acts, Map<String,Integer> placement, boolean useTiming){
+	private TestActor[] mkScriptedActors(List<Act> acts, boolean useTiming){
+		// compute placement map
+		Map<String,Integer> placement = TestAppIO.getPlacements(acts);
 		// create array of actors
 		ScriptedActor[] Actors = new ScriptedActor[placement.size()];
 		// create list of acts for each actor
@@ -359,125 +255,93 @@ public class TestApplication {
 		// return actors array
 		return Actors;
 	}
-	/** Create a mapping of all unique callers identified in list of
-	 *  Acts to a unique assigned number. Callers are identified by
-	 *  the getCallerNm() string method. Numbering starts at zero 
-	 *  and increments by one for new caller found. Callers are number
-	 *  in the order they occur in the list given by list iterator.
-	 *  @param acts list of all acts to 
-	 *  @return Map<String,Integer> map of unique caller names to unique numbers
+	/** General method for running a set of actors, getting results and outputting to file
+	 * @param actors list of actors to run test with
 	 */
-	private static Map<String,Integer> getPlacements(List<Act> acts){
-		// set initial actor number
-		int i = 0;
-		// Initialize map of caller name to caller index
-		Map<String,Integer> tmp = new HashMap<String,Integer>();
-		// iterate acts list
-		for (Act a : acts){
-			// if the map does not yet contain this caller
-			if(!tmp.containsKey(a.getCallerNm())){
-				// add the 
-				tmp.put(a.getCallerNm(), Integer.valueOf(i++));
-			}
+	private void runTest(List<TestActor> actors){
+		// record start time
+		long startTime = System.currentTimeMillis();
+		// start actors running
+		this.ActorCnt.set(actors.size());
+		for(TestActor a : actors){
+			a.run();
 		}
-		return tmp;
+		// wait until all actors have completed
+		while (this.ActorCnt.get()>0){
+			try {
+				this.wait();
+			} catch (Exception e) {}
+		}
+		// record end time
+		long endTime = System.currentTimeMillis();
+		// gather up results and write out to file
+		TestAppIO.writeLogFile(this.outFile, this.tree.getSize(), endTime-startTime, actors);
 	}
-	// Psuedo-serialization methods
-	/** Reads in scanner of previous test output and constructs list
-	 *  of all acts. Utilizes Act.scanAct method to accomplish this.
-	 *  Compatible with writeActors and writeActs methods below.
-	 *  @param txt Scanner holding input
-	 *  @return List of Acts scanned from input
+	/** General method for running a set of actors, getting results and outputting to file
+	 * @param actors array of actors to run test with
 	 */
-	private static List<Act> scanActs(Scanner txt){
-		ArrayList<Act> alist = new ArrayList<Act>();
-		while (txt.hasNext()){
-			// scan Act from input
-			Act tmp = Act.scanAct(txt);
-			if(tmp!=null){
-				// if success, add to list
-				alist.add(tmp);
-			} else {
-				// else, there was a problem!
-				break;
-			}
+	private void runTest(TestActor[] actors){
+		// record start time
+		long startTime = System.currentTimeMillis();
+		// start actors running
+		this.ActorCnt.set(actors.length);
+		for(TestActor a : actors){
+			a.run();
 		}
-		// return list
-		return alist;
+		// wait until all actors have completed
+		while (this.ActorCnt.get()>0){
+			try {
+				this.wait();
+			} catch (Exception e) {}
+		}
+		// record end time
+		long endTime = System.currentTimeMillis();
+		// gather up results and write out to file
+		TestAppIO.writeLogFile(this.outFile, this.tree.getSize(), endTime-startTime, actors);
 	}
-	/** Outputs list of all actions by all actors provided
-	 *  Compatible with scanActs method above
-	 *  @param actors List of actors with actions to output
-	 *  @return String representing list of all Acts from all Actors
+	/** General method for running a set of actors, getting results and outputting to file
+	 * @param actors list of actors to run test with
 	 */
-	private static String writeActors(List<TestActor> actors){
-		// Initialize temporary text string
-		String txt = new String();
-		// for each actor
-		for(TestActor A : actors){
-			// for each act of that actor
-			for(Act a : A.getActions()){
-				// concatenate this act.toString() onto the
-				// temporary string followed by a newline
-				txt += a.toString() + "\n";
-			}
+	private void runTest(Writer output, List<TestActor> actors){
+		// record start time
+		long startTime = System.currentTimeMillis();
+		// start actors running
+		this.ActorCnt.set(actors.size());
+		for(TestActor a : actors){
+			a.run();
 		}
-		// return resulting string
-		return txt;
+		// wait until all actors have completed
+		while (this.ActorCnt.get()>0){
+			try {
+				this.wait();
+			} catch (Exception e) {}
+		}
+		// record end time
+		long endTime = System.currentTimeMillis();
+		// gather up results and write out to file
+		TestAppIO.writeLogFile(output, this.outFile, this.tree.getSize(), endTime-startTime, actors);
 	}
-	/** Outputs list of all actions by all actors provided
-	 *  Compatible with scanActs method above
-	 *  @param actors array of actors with actions to output
-	 *  @return String representing list of all Acts from all Actors
+	/** General method for running a set of actors, getting results and outputting to file
+	 * @param actors array of actors to run test with
 	 */
-	private static String writeActors(TestActor[] actors){
-		// Initialize temporary text string
-		String txt = new String();
-		// for each actor
-		for(TestActor A : actors){
-			// for each act of that actor
-			for(Act a : A.getActions()){
-				// concatenate this act.toString() onto the
-				// temporary string followed by a newline
-				txt += a.toString() + "\n";
-			}
+	private void runTest(Writer output, TestActor[] actors){
+		// record start time
+		long startTime = System.currentTimeMillis();
+		// start actors running
+		this.ActorCnt.set(actors.length);
+		for(TestActor a : actors){
+			a.run();
 		}
-		// return resulting string
-		return txt;
-	}
-	/** Outputs list of all actions by all actors
-	 *  Compatible with scanActs method above
-	 *  @param acts List<Act> to be outputted
-	 *  @return String representing list of all Acts
-	 */
-	private static String writeActs(List<Act> acts){
-		// Initialize temporary text string
-		String txt = new String();
-		// for each act
-		for(Act a : acts){
-			// concatenate this act.toString() onto the
-			// temporary string followed by a newline
-			txt += a.toString() + "\n";
+		// wait until all actors have completed
+		while (this.ActorCnt.get()>0){
+			try {
+				this.wait();
+			} catch (Exception e) {}
 		}
-		// return resulting string
-		return txt;
-	}
-	/** Outputs list of all actions provided
-	 *  Compatible with scanActs method above
-	 *  @param acts Act[] to be outputted
-	 *  @return String representing list of all Acts
-	 */
-	private static String writeActs(Act[] acts){
-		// Initialize temporary text string
-		String txt = new String();
-		// for each act
-		for(Act a : acts){
-			// concatenate this act.toString() onto the
-			// temporary string followed by a newline
-			txt += a.toString() + "\n";
-		}
-		// return resulting string
-		return txt;
+		// record end time
+		long endTime = System.currentTimeMillis();
+		// gather up results and write out to file
+		TestAppIO.writeLogFile(output, this.outFile, this.tree.getSize(), endTime-startTime, actors);
 	}
 	
 	// Methods for Actors to perform actions on instance oblivious Tree
@@ -500,7 +364,7 @@ public class TestApplication {
 			a.setData(chunk);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do insert
-			this.tree.insert(chunk, i, this.signatures[0]);
+			//this.tree.insert(chunk, i, this.signatures[0]);
 		} else if (act>=5 && act<=9){
 			// position to insert
 			int i = this.rnd.nextInt(this.tree.getSize()+1);
@@ -509,7 +373,7 @@ public class TestApplication {
 			a.setLocation(i);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do delete
-			this.tree.delete(i, this.signatures[0]);
+			//this.tree.delete(i, this.signatures[0]);
 		} else if (act>=10 && act<=10){
 			// set act parameters
 			a.setOperation(OpType.GENSIG);
