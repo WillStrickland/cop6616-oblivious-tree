@@ -211,6 +211,112 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
             
         }
         
+        private DescStatus randomizeTree(DescStatus currentStatus)
+        {
+            OTree_Node newSubTree = new OTree_Node();
+            DescStatus newStatus = new DescStatus();
+            int w, randomDegree, oldDegree;
+            
+            OTree_Node currentNode = (OTree_Node)currentStatus.currentNode;
+            OTree_Node parent = (OTree_Node)currentStatus.parent;
+            OTree_Node leafPath = (OTree_Node)currentStatus.leafPath;
+            OTree_Node previousNode = (OTree_Node)currentStatus.previousNode;
+            
+            LinkedList<OTree_Elem> unassigned = currentStatus.unassigned;
+            OTree_Elem[] children = currentNode.getChildren();
+            
+            for(int transfer1 = 0; transfer1 < children.length; transfer1++)
+            {
+                newSubTree.addChild(currentNode.getChild(transfer1));
+            }
+            
+            randomDegree = (rndSrc.get().nextBoolean()) ? 2 : 3;
+            
+            for(int transferRand = 0; transferRand < randomDegree; transferRand++)
+            {
+                if(newSubTree.getDegree() > randomDegree)
+                {
+                    unassigned.push(newSubTree.getChild(newSubTree.getDegree() - 1));
+                    newSubTree.removeChild(newSubTree.getDegree() - 1);
+                }
+                
+                if(unassigned.size() > 0)
+                {
+                    newSubTree.addChild(unassigned.pop());                    
+                }
+                else
+                {
+                    break;
+                }
+            }
+            
+            if(currentNode == null && previousNode.getParent() == null)
+            {
+                /*
+                 * If the current node is sitting in null space, and the parent
+                 * of its previous life is pointing to nothing, this means I was
+                 * at the root and I need to stop.
+                 */
+                newStatus.stage = DescStatus.StatusType.DONE;
+                newStatus.currentNode = previousNode;
+                return newStatus;
+            }
+            else if(currentNode == null && previousNode.getParent() != null)
+            {
+                /*
+                 * If my previous life has a parent, this means I reached the
+                 * end of the level.
+                 */
+                
+                if(unassigned.size() > 0)
+                {
+                    /*
+                     * I still have unassigned children. Extend the level.
+                     */
+                    
+                    
+                }
+                
+                newStatus.currentNode = leafPath.getParent();
+                newStatus.previousNode = newStatus.currentNode.getPrevNeighbor();
+                newStatus.parent = parent.getParent();
+            }
+            else if(currentNode.getNeighbor() == null)
+            {
+                newStatus.currentNode = leafPath.getParent();
+                newStatus.parent = newStatus.currentNode.getParent();
+            }
+            else
+            {
+                w = 1;
+                randomDegree = (rndSrc.get().nextBoolean()) ? 2 : 3;
+                
+                while(w > 0)
+                {                    
+                    oldDegree = newSubTree.getDegree();
+                    
+                    for(int transfer2 = 0; transfer2 < w; transfer2++)
+                    {
+                        newSubTree.addChild(unassigned.pop());
+                    }
+                    
+                    w = java.lang.Math.max(0, ((oldDegree + w) - randomDegree));
+                }
+                
+                
+            }
+            
+            
+            
+            return newStatus;
+        }
+        /**
+         * 
+         * @param byte[] value
+         * @param int i
+         * @param Signature signer
+         * @return void
+         */
         public void concurrentInsert(TaskDesc t)
         {
             Random this_rnd = rndSrc.get();
@@ -283,69 +389,77 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                     //If the status is open, then that means we need to propose
                     //a new subtree to replace whatever the currentNode is
                     
-                    newSubTree = new OTree_Node();
-                    OTree_Elem[] children = t.status.get().currentNode.getChildren();
+                    //newSubTree = new OTree_Node();
+                    //OTree_Elem[] children = t.status.get().currentNode.getChildren();
+                    DescStatus newStatus;
                     
-                    if(t.status.get().unassigned.size() > 0)
-                    {
-                        int limit =  t.status.get().unassigned.size();
-                        //insert unassigned nodes into currentNode
-                        for(int transfer1 = 0; transfer1 < limit; transfer1++)
-                        {                            
-                            newSubTree.addChild(t.status.get().unassigned.pop());
-                        }                        
-                    }
+                    newStatus = randomizeTree(t.status.get());
                     
-                    for(int transfer2 = 0; transfer2 < children.length; transfer2++)
-                    {
-                        newSubTree.addChild(children[transfer2]);
-                    }
+//                    if(t.status.get().unassigned.size() > 0)
+//                    {
+//                        int limit =  t.status.get().unassigned.size();
+//                        //insert unassigned nodes into currentNode
+//                        for(int transfer1 = 0; transfer1 < limit; transfer1++)
+//                        {                            
+//                            newSubTree.addChild(t.status.get().unassigned.pop());
+//                        }                        
+//                    }
+//                    
+//                    for(int transfer2 = 0; transfer2 < children.length; transfer2++)
+//                    {
+//                        newSubTree.addChild(children[transfer2]);
+//                    }
+//                    
+//                    randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
+//                    DescStatus newStatus = new DescStatus(DescStatus.StatusType.LINK);
+//                    
+//                    if(randomDegree == newSubTree.getDegree())
+//                    {
+//                        /*
+//                         * Structure synchronized. Stop here for this level
+//                         * and go up to the next level.
+//                         */
+//                        newStatus.currentNode = t.status.get().parent.getParent();
+//                        newStatus.previousNode = newStatus.currentNode.getPrevNeighbor();
+//                        newStatus.parent = newStatus.currentNode.getParent();
+//                        
+//                    }
+//                    else
+//                    {
+//                        
+//                    }
+//                    
+//                    for(int transfer3 = 0; transfer3 < randomDegree; transfer3++)
+//                    {
+//                        t.status.get().unassigned.push(newSubTree.getChild(newSubTree.getDegree() - 1));
+//                        newSubTree.removeChild(newSubTree.getDegree() - 1);
+//                    }
+//                    //Save previous node in descriptor so we can reattach the 
+//                    //level links when we replace the old node with our new one
+//                    
+//                    //The first thing that must be done is to figure where you
+//                    //are in the tree based on the currentNode. Do I need to 
+//                    //go up one level or continue on the current level?
+//                    if(t.status.get().currentNode.getParent() != null)
+//                    {
+//                        if(t.status.get().currentNode.getNeighbor() == null)
+//                        {
+//                            
+//                        }
+//                    }
+//                    else
+//                    {
+//                        //DescStatus newStatus = new DescStatus(DescStatus.StatusType.DONE);
+//                        
+//                        if(t.status.compareAndSet(t.status.get(), newStatus))
+//                        {
+//                            
+//                        }
+//                    }
                     
-                    randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
-                    DescStatus newStatus = new DescStatus(DescStatus.StatusType.LINK);
-                    
-                    if(randomDegree == newSubTree.getDegree())
+                    if(t.status.compareAndSet(t.status.get(), newStatus))
                     {
-                        /*
-                         * Structure synchronized. Stop here for this level
-                         * and go up to the next level.
-                         */
-                        newStatus.currentNode = t.status.get().parent.getParent();
-                        newStatus.previousNode = newStatus.currentNode.getPrevNeighbor();
-                        newStatus.parent = newStatus.currentNode.getParent();
-                        
-                    }
-                    else
-                    {
-                        
-                    }
-                    
-                    for(int transfer3 = 0; transfer3 < randomDegree; transfer3++)
-                    {
-                        t.status.get().unassigned.push(newSubTree.getChild(newSubTree.getDegree() - 1));
-                        newSubTree.removeChild(newSubTree.getDegree() - 1);
-                    }
-                    //Save previous node in descriptor so we can reattach the 
-                    //level links when we replace the old node with our new one
-                    
-                    //The first thing that must be done is to figure where you
-                    //are in the tree based on the currentNode. Do I need to 
-                    //go up one level or continue on the current level?
-                    if(t.status.get().currentNode.getParent() != null)
-                    {
-                        if(t.status.get().currentNode.getNeighbor() == null)
-                        {
-                            
-                        }
-                    }
-                    else
-                    {
-                        //DescStatus newStatus = new DescStatus(DescStatus.StatusType.DONE);
-                        
-                        if(t.status.compareAndSet(t.status.get(), newStatus))
-                        {
-                            
-                        }
+
                     }
                 }
                 else if(t.status.get().stage == DescStatus.StatusType.LINK)
@@ -392,28 +506,13 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
                      */
                     if(t.status.compareAndSet(t.status.get(), newStatus))
                     {
-                        
+                        newStatus.previousNode = newStatus.currentNode;
+                        newStatus.currentNode = newStatus.currentNode.getNeighbor();
                     }
                 }
             };
             
-//            while(currentNode != null)
-//            {
-//                randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
-//                
-//                if(currentNode.getNeighbor() != null)
-//                {
-//                    neighbor = (OTree_Node)currentNode.getNeighbor();
-//                }
-//                else
-//                {
-//                    //Coming here means you've reached the end of the level,
-//                    //and you need to go up to the next one.s
-//                    //currentNode = currentNode.getParent();
-//                }
-//                
-//                currentNode = (OTree_Node)currentNode.getParent();
-//            }
+            root = (OTree_Node)t.status.get().currentNode;
             
         }
         
