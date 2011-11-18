@@ -127,7 +127,7 @@ public class TestApplication {
 	
 	
 	public static void main(String[] args) {
-		testActMethods_scanAct();
+		testObliviousMethods();
 		//testActMethods_scanByteArray();
 	}
 	
@@ -212,11 +212,11 @@ public class TestApplication {
 	/** MUSTRUN code for testing the instance methods for Act.scanByteArray
 	 */
 	private static void testObliviousMethods(){
-		int action_count = 1000; // number of actions to perform
-		boolean showS = false;	// show successful case output
+		int action_count = 10; // number of actions to perform
+		boolean showS = true;	// show successful case output
 		boolean showF = true;	// show failure case output
 		// generate test instance
-		TestApplication test = new TestApplication(1000, "iamtheverymodelofamodernmajorgeneral");
+		TestApplication test = new TestApplication(100, "iamtheverymodelofamodernmajorgeneral");
 		// test to make sure oblivious tree created valid
 		boolean valid = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
 		System.out.println("0\tTreeCreate\t - Valid="+valid);
