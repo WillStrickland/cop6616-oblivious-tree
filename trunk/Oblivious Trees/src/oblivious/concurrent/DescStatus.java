@@ -15,6 +15,7 @@ class DescStatus {
 	int index;
 	protected StatusType stage;
 	protected OTree_Elem parent;
+        protected OTree_Elem leafPath;
 	protected OTree_Elem previousNode;
 	protected OTree_Elem currentNode;
 	protected LinkedList<OTree_Elem> unassigned;
