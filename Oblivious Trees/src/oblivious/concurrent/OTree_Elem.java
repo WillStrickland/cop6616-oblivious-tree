@@ -96,11 +96,19 @@ abstract class OTree_Elem {
 	 *  @return true if successful, false if failure
 	 */
 	public abstract boolean setChild(int i, OTree_Elem c);
-	/** adds a child to end of the child list.
-	 *  @param c child to be added
+	/** performs an atomic compareAndSet the pointer to one child with another.
+	 *  Cannot increase degree of node.
+	 *  @param i index of child to be updated
+	 *  @param e expected child pointer at index
+	 *  @param n new child to be set at location
 	 *  @return true if successful, false if failure
 	 */
-	public abstract boolean addChild(OTree_Elem c);
+	public abstract boolean casChild(int i, OTree_Elem e, OTree_Elem n);
+	/** adds a child to end of the child list.
+	 *  @param c child to be added
+	 *  @return index of parent's child array where this element was added, -1 if failed
+	 */
+	public abstract int addChild(OTree_Elem c);
 	/** remove a child at given position from child set. 
 	 *  @param i index of child to be removed
 	 *  @return true if successful, false if failure

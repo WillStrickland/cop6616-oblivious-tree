@@ -70,8 +70,11 @@ class OTree_Leaf extends OTree_Elem{
 	public boolean setChild(int i, OTree_Elem c){
 		return false;
 	}
-	public boolean addChild(OTree_Elem c){
+	public boolean casChild(int i, OTree_Elem e, OTree_Elem n){
 		return false;
+	}
+	public int addChild(OTree_Elem c){
+		return -1;
 	}
 	public boolean removeChild(int i){
 		return false;

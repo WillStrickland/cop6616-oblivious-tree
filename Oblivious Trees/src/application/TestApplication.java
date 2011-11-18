@@ -155,7 +155,7 @@ public class TestApplication {
 	}
 	/** code for having random threads do random inserts and deletes on a shared oblivious tree
 	 */
-	private static void testRndActions(){
+	private static String testRndActors(){
 		// generate test application
 		TestApplication test = new TestApplication();
 		
@@ -171,6 +171,7 @@ public class TestApplication {
 		for(int i=0; i<Actors.length; i++){
 			Actors[i].run();
 		}
+		
 	}
 	/** code for testing the instance methods for Act.scanByteArray
 	 */
