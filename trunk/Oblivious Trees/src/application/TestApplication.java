@@ -489,7 +489,7 @@ public class TestApplication {
 	public Act buttonMash(){
 		Act a = new Act();
 		// Roll for random action
-		int act = rnd.nextInt(11);
+		int act = rnd.nextInt(4); //!!! should be nextInt(11)
 		if (act>=0 && act<=4){
 			// position to insert
 			int i = this.rnd.nextInt(this.tree.getSize()+1);
