@@ -75,7 +75,7 @@ public abstract class TestActor implements Runnable {
 		ArrayList<Act> tmp = new ArrayList<Act>(this.actions.size());
 		// copy individual act records into new list
 		for (int i=0; i<this.actions.size(); i++){
-			tmp.set(i, this.actions.get(i).clone());
+			tmp.add(this.actions.get(i).clone());
 		}
 		// return deep cloned list
 		return tmp;

@@ -56,6 +56,8 @@ public class TestApplication {
 		tree = new SequentialObliviousTree(file, signatures[0]);
 		// set start time
 		startTime = System.currentTimeMillis();
+		// initialize actor count 
+		ActorCnt = new AtomicInteger(0);
 	}
 	/** TestApplication constructor
 	 * @param filesize size (in chunks) of random input to use
@@ -73,6 +75,8 @@ public class TestApplication {
 		this.outFile = outfile;
 		// set start time
 		startTime = System.currentTimeMillis();
+		// initialize actor count 
+		ActorCnt = new AtomicInteger(0);
 	}
 	/** TestApplication constructor
 	 * @param f byte file to use as input
@@ -88,6 +92,8 @@ public class TestApplication {
 		tree = new SequentialObliviousTree(file, signatures[0]);
 		// set start time
 		startTime = System.currentTimeMillis();
+		// initialize actor count 
+		ActorCnt = new AtomicInteger(0);
 	}
 	/** Initialize psuedo-random number generator
 	 *  @return new psuedo-random number generator, null if error
@@ -131,8 +137,120 @@ public class TestApplication {
 	public static void main(String[] args) {
 		//TestAppIO.testActMethods_scanAct();
 		//TestAppIO.testActMethods_scanByteArray();
-		testObliviousMethods();
+		//testObliviousMethods();
+		randomTests(true);
 	}
+	/** driver method for running multiple random tests to generate 
+	 */
+	private static void randomTests(boolean summary){
+		// set output file names
+		List<String> files = new ArrayList<String>();
+		files.add("testlog");
+		// set tree sizes
+		List<Integer> treeSizes = new ArrayList<Integer>();
+		//treeSizes.add(Integer.valueOf(10));
+		//treeSizes.add(Integer.valueOf(100));
+		treeSizes.add(Integer.valueOf(1000));
+		treeSizes.add(Integer.valueOf(5000));
+		//treeSizes.add(Integer.valueOf(10000));
+		// set actor counts
+		List<Integer> actorCnts = new ArrayList<Integer>();
+		actorCnts.add(Integer.valueOf(1));
+		actorCnts.add(Integer.valueOf(2));
+		actorCnts.add(Integer.valueOf(4));
+		actorCnts.add(Integer.valueOf(8));
+		//actorCnts.add(Integer.valueOf(16));
+		//actorCnts.add(Integer.valueOf(32));
+		// set action counts
+		List<Integer> actionCnts = new ArrayList<Integer>();
+		//actionCnts.add(Integer.valueOf(1));
+		//actionCnts.add(Integer.valueOf(5));
+		actionCnts.add(Integer.valueOf(10));
+		actionCnts.add(Integer.valueOf(25));
+		//actionCnts.add(Integer.valueOf(50));
+		//actionCnts.add(Integer.valueOf(100));
+		// set number of trials to do with each configuration
+		int trials = 3;
+		// in case summary, create single output file
+		BufferedWriter summaryOut = null;
+		if (summary){
+			try {
+				summaryOut = new BufferedWriter(new FileWriter(files.get(0)+".txt"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		// Run every configuration for set number of trials
+		for(String fn : files){
+			for(Integer treeSize : treeSizes){
+				for(Integer actorCnt : actorCnts){
+					for(Integer actionCnt : actionCnts){
+						for(int i=0; i<trials; i++){
+							// create new test instance
+							TestApplication test = new TestApplication(treeSize.intValue(),fn+"_"+treeSize+"_"+actorCnt+"_"+actionCnt+"_"+i+".txt");							
+							// make actors and actions
+							TestActor[] actors = test.mkRandomActors(actorCnt, actionCnt, false);
+							// run tests and output results
+							if(summary){
+								// write summarized (without actions) logs to single file
+								test.runTest(summaryOut, actors);
+							} else {
+								// write detailed (with actions) logs to individual files
+								test.runTest(actors);
+							}
+						}
+					}
+				}
+			}
+		}
+		// close file
+		try {
+			summaryOut.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {}
+	}
+	/** driver method for running multiple scripted tests to generate
+	 */
+	private static void scriptedTests(boolean summary){
+		// set input file names
+		List<String> files = new ArrayList<String>();
+		files.add("testlog1.txt");
+		int treeSize = 100;
+		int trials = 3;
+		// in case summary, create single output file
+		BufferedWriter summaryOut = null;
+		try {
+			summaryOut = new BufferedWriter(new FileWriter(files.get(0)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// Run every configuration for set number of trials
+		for(String fn : files){
+			for(int i=0; i<trials; i++){
+				// create new test instance
+
+				TestApplication test = new TestApplication(treeSize,fn);							
+				// make actors and actions
+				TestActor[] actors = test.mkScriptedActors(fn, false);
+				// run tests and output results
+				if(summary){
+					// write summarized (without actions) logs to single file
+					test.runTest(summaryOut, actors);
+				} else {
+					// write detailed (with actions) logs to individual files
+					test.runTest(actors);
+				}
+			}
+		}
+		// close file
+		try {
+			summaryOut.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	// Component testing methods
 	/** code for having random threads do random inserts and deletes on a shared oblivious tree
@@ -225,10 +343,28 @@ public class TestApplication {
 	}
 	/** Method to create a specified number of random actors
 	 *  with specified number of actions to take
+	 *  @param txt name of file to read acts from
+	 *  @param useTiming sets the useTiming flag of each actor
+	 *  @return TestActor[] of ScriptedActor objects
+	 */
+	private TestActor[] mkScriptedActors(String fileName, boolean useTiming){
+		return this.mkScriptedActors(TestAppIO.scanLogFile(fileName), useTiming);
+	}
+	/** Method to create a specified number of random actors
+	 *  with specified number of actions to take
+	 *  @param txt scanner to read acts from
+	 *  @param useTiming sets the useTiming flag of each actor
+	 *  @return TestActor[] of ScriptedActor objects
+	 */
+	private TestActor[] mkScriptedActors(Scanner txt, boolean useTiming){
+		return this.mkScriptedActors(TestAppIO.scanLogFile(txt), useTiming);
+	}
+	/** Method to create a specified number of random actors
+	 *  with specified number of actions to take
 	 *  @param acts list of all acts to be performed
 	 *  @param placement map specifying the map of each act to a numbered actor
 	 *  @param useTiming sets the useTiming flag of each actor
-	 *  @return TestActor[] of RandomActor objects
+	 *  @return TestActor[] of ScriptedActor objects
 	 */
 	private TestActor[] mkScriptedActors(List<Act> acts, boolean useTiming){
 		// compute placement map
@@ -269,7 +405,7 @@ public class TestApplication {
 		// wait until all actors have completed
 		while (this.ActorCnt.get()>0){
 			try {
-				this.wait();
+				//this.wait();
 			} catch (Exception e) {}
 		}
 		// record end time
@@ -291,7 +427,7 @@ public class TestApplication {
 		// wait until all actors have completed
 		while (this.ActorCnt.get()>0){
 			try {
-				this.wait();
+				//this.wait();
 			} catch (Exception e) {}
 		}
 		// record end time
@@ -313,7 +449,7 @@ public class TestApplication {
 		// wait until all actors have completed
 		while (this.ActorCnt.get()>0){
 			try {
-				this.wait();
+				//this.wait();
 			} catch (Exception e) {}
 		}
 		// record end time
@@ -335,7 +471,7 @@ public class TestApplication {
 		// wait until all actors have completed
 		while (this.ActorCnt.get()>0){
 			try {
-				this.wait();
+				//this.wait();
 			} catch (Exception e) {}
 		}
 		// record end time
@@ -407,7 +543,7 @@ public class TestApplication {
 	 */
 	public void notifyActorComplete(){
 		this.ActorCnt.decrementAndGet();
-		this.notify();
+		//this.notify();
 	}
 	
 }

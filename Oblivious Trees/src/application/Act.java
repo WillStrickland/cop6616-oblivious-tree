@@ -198,7 +198,11 @@ public class Act implements Cloneable, Delayed{
 	 *  @return String representation
 	 */
 	public String toString(){
-		return ((caller!=null)?this.caller.toString():this.callerNm)+"\t"+this.time+"\t"+((this.operation!=null)?this.operation.name():"NOOP")+"\t"+this.location+"\t"+Arrays.toString(this.data);
+		return ((caller!=null)?this.caller.toString():this.callerNm)
+				+"\t"+this.time+"\t"
+				+((this.operation!=null)?this.operation.name():"NOOP")
+				+"\t"+this.location+"\t"
+				+Arrays.toString(this.data);
 	}
 	/** Method for constructing a new Act 
 	 *  object from the string representation Compatible
@@ -271,7 +275,7 @@ public class Act implements Cloneable, Delayed{
 		tmp.operation = this.operation;
 		tmp.time = this.time;
 		tmp.location = this.location;
-		tmp.data = Arrays.copyOf(this.data, this.data.length);
+		tmp.data = (this.data!=null) ? Arrays.copyOf(this.data, this.data.length) : null;
 		return tmp;
 	}
 	// Delayed methods
