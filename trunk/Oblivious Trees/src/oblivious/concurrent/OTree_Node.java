@@ -1,13 +1,18 @@
 package oblivious.concurrent;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 class OTree_Node extends OTree_Elem {
 
 	// Instance Variable
-	private OTree_Elem[] children;
-	private int degree;
+	private AtomicReferenceArray<OTree_Elem> children;
+	private int childNum;
+	private AtomicInteger degree;
 	private int leafCnt;
 	
 	// Constructors
@@ -16,11 +21,9 @@ class OTree_Node extends OTree_Elem {
 	public OTree_Node(){
 		super();
 		// initialize children array
-		children = new OTree_Elem[OTree_Elem.MAX_CHILDREN];
-		// initialize all children to null
-		Arrays.fill(children, null);
+		children = new AtomicReferenceArray<OTree_Elem>(OTree_Elem.MAX_CHILDREN);
 		// set degree and leaf count to zero
-		degree = 0;
+		degree = new AtomicInteger(0);
 		leafCnt = 0;
 	}
 	/** Construct OTree_Node with with parent but no children.
@@ -30,11 +33,9 @@ class OTree_Node extends OTree_Elem {
 		// call super to set parent
 		super(p);
 		// initialize children array
-		children = new OTree_Elem[OTree_Elem.MAX_CHILDREN];
-		// initialize all children to null
-		Arrays.fill(children, null);
+		children = new AtomicReferenceArray<OTree_Elem>(OTree_Elem.MAX_CHILDREN);
 		// set degree and leaf count to zero
-		degree = 0;
+		degree = new AtomicInteger(0);
 		leafCnt = 0;
 	}
 	
@@ -43,50 +44,61 @@ class OTree_Node extends OTree_Elem {
 		// reset leaf count
 		this.leafCnt = 0;
 		// for each child
-		for (int i=0; i<this.degree; i++){
+		for (int i=0; i<this.degree.get(); i++){
 			// sum leaf count
-			leafCnt += children[i].getLeafCnt();
+			leafCnt += children.get(i).getLeafCnt();
 		}
 	}
 	public void calcLeafCnt(boolean forceCalc){
 		// reset leaf count
 		this.leafCnt = 0;
 		// for each child
-		for (int i=0; i<this.degree; i++){
+		for (int i=0; i<this.degree.get(); i++){
 			// if force calc set
 			if (forceCalc){ 
 				// recalculate leaf count for each child's subtree
-				children[i].calcLeafCnt(forceCalc);
+				children.get(i).calcLeafCnt(forceCalc);
 			}
 			// sum leaf count
-			leafCnt += children[i].getLeafCnt();
+			leafCnt += children.get(i).getLeafCnt();
 		}
 	}
 	public boolean setChild(int i, OTree_Elem c){
 		// check index and c are valid
-		if (i>=0 && i<this.degree && c!=null){
+		if (i>=0 && i<this.degree.get() && c!=null){
 			// set c into child set and return true
-			this.children[i] = c;
+			this.children.set(i,c);
 			return true;
 		} else {
 			// else return false
 			return false;
 		}
 	}
-	public boolean addChild(OTree_Elem c){
-		// check child and degree not already maximum 
-		if (c!=null && this.degree<OTree_Elem.MAX_CHILDREN){
-			// add this as next child and increment degree
-			this.children[this.degree++] = c;
-			return true;
-		} else {
-			// return failure
-			return false;
+	public int addChild(OTree_Elem c){
+		// loop attempting to add child
+		while (true){ 
+			// get current degree
+			int curDegree = this.degree.get();
+			// check child and degree not already maximum 
+			if (c!=null && curDegree<OTree_Elem.MAX_CHILDREN){
+				// try to increment degree
+				if (this.degree.compareAndSet(curDegree, curDegree+1)){
+					// if successful, add next child in reserved slot
+					this.children.set(curDegree, c);
+					//return the index that was reserved
+					return curDegree;;
+				}				
+			} else {
+				// return failure
+				return -1;
+			}
 		}
 	}
 	public boolean removeChild(int i){
+		// get current degree
+		int curDegree = this.degree.get();
 		// check if valid index
-		if (i>=0 && i<this.degree){
+		if (i>=0 && i<this.degree.){
 			// decrement degree
 			this.degree--;
 			// shift all nodes to right one 
@@ -172,4 +184,6 @@ class OTree_Node extends OTree_Elem {
 			return null;
 		}
 	}
+	@Override
+	
 }

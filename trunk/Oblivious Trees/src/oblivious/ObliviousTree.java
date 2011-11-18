@@ -10,7 +10,7 @@ import java.util.Random;
 
 /** Oblivious Tree - COP 6616
  * @author William Strickland and Chris Fontaine
- * @version Abstract Class of Sequential and Concurrent Implementations 
+ * @version Abstract Class of Sequential and Concurrent Implementations
  */
 public abstract class ObliviousTree {
 
