@@ -68,7 +68,7 @@ public class TestAppIO {
 			Scanner txt = new Scanner(new File(fileName));
 			// call overloaded version that works on scanner
 			rtn = scanLogFile(txt);
-		} catch (Exception e) {}
+		} catch (IOException e) {}
 		// return result from scanner version
 		return rtn;
 	}
