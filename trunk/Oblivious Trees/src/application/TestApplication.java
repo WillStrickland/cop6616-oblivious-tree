@@ -56,7 +56,7 @@ public class TestApplication {
 		startTime = System.currentTimeMillis();
 	}
 	/** TestApplication constructor
-	 * @param filesize size of random input to use
+	 * @param filesize size (in chunks) of random input to use
 	 */
 	public TestApplication(int filesize, String outfile){
 		// rnd and crypto
@@ -216,7 +216,7 @@ public class TestApplication {
 		boolean showS = true;	// show successful case output
 		boolean showF = true;	// show failure case output
 		// generate test instance
-		TestApplication test = new TestApplication(100, "iamtheverymodelofamodernmajorgeneral");
+		TestApplication test = new TestApplication(10, "iamtheverymodelofamodernmajorgeneral");
 		// test to make sure oblivious tree created valid
 		boolean valid = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
 		System.out.println("0\tTreeCreate\t - Valid="+valid);

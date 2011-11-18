@@ -3,7 +3,8 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
@@ -71,9 +72,9 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	 *  @param signer signature to be used for signing leaves
 	 *  @return list of leaves created
 	 */
-	private Vector<OTree_Elem> generateLeaves(FileInputStream file, Signature signer){
+	private ArrayList<OTree_Elem> generateLeaves(FileInputStream file, Signature signer){
 		int this_size;
-		Vector<OTree_Elem> tmp = new Vector<OTree_Elem>();
+		ArrayList<OTree_Elem> tmp = new ArrayList<OTree_Elem>();
 		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
 		try {
 			// loop until reaches end of file
@@ -101,9 +102,9 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	 *  @param signer signature to be used for signing leaves
 	 *  @return list of leaves created
 	 */
-	private Vector<OTree_Elem> generateLeaves(byte[] file, Signature signer){
+	private ArrayList<OTree_Elem> generateLeaves(byte[] file, Signature signer){
 		int this_size=0;
-		Vector<OTree_Elem> tmp = new Vector<OTree_Elem>();
+		ArrayList<OTree_Elem> tmp = new ArrayList<OTree_Elem>();
 		// clear current leaves
 		try {
 			// loop until reaches end of file
@@ -120,88 +121,54 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 		}
 	} //*/
 	
-        /** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
-         *  and, after taking a number between two and three, generate a number of non-leaf, which
-         */
-        private void create(Vector<OTree_Elem> leaves, Signature signer)
-        {
-                Random this_rnd = rndSrc.get();
-                int randomDegree;
-                int numOfNodesAtLevel;
-                int nodesAdded = 0;
-                int nodeIndex = 0;
-                int addCount;
-                int traversingLevel;
-                OTree_Node tempNode;
-                
-                /*
-                 * Holds the nodes contained at the previous level. It is 
-                 * instantiated with the nodes at the leaf level
-                 */
-                Vector<OTree_Elem> previousLevel = leaves;
-                /*
-                 * Holds the nodes being added to the current level.
-                 */
-                Vector<OTree_Elem> currentLevel;
-                
-                while(previousLevel.size() > 1)
-                {
-                    currentLevel = new Vector<OTree_Elem>();
-                    numOfNodesAtLevel = previousLevel.size();
-                    
-                    for(addCount = 0; addCount < numOfNodesAtLevel; addCount += randomDegree)
-                    {
-                        randomDegree = (this_rnd.nextBoolean()) ? 2 : 3;
-                        randomDegree = (((addCount + randomDegree) + 1) > numOfNodesAtLevel) ? ((addCount + randomDegree) + 1) - numOfNodesAtLevel : randomDegree;
-                        tempNode = new OTree_Node();
-                        
-                        switch(randomDegree)
-                        {
-                            case 1:
-                                previousLevel.get(addCount).setParent(tempNode);
-                                tempNode.addChild(previousLevel.get(addCount));
-                                break;
-                            case 2:                                
-                                previousLevel.get(addCount).setParent(tempNode);
-                                tempNode.addChild(previousLevel.get(addCount));
-                                previousLevel.get(addCount + 1).setParent(tempNode);
-                                tempNode.addChild(previousLevel.get(addCount + 1));
-                                break;
-                            case 3:
-                                previousLevel.get(addCount).setParent(tempNode);
-                                tempNode.addChild(previousLevel.get(addCount));
-                                previousLevel.get(addCount + 1).setParent(tempNode);
-                                tempNode.addChild(previousLevel.get(addCount + 1));
-                                previousLevel.get(addCount + 2).setParent(tempNode);
-                                tempNode.addChild(previousLevel.get(addCount + 2));
-                                break;
-                        }
-                        
-                        try
-                        {
-                            currentLevel.lastElement().setNeighbor(tempNode);
-                            tempNode.setPrevNeighbor(currentLevel.lastElement());
-                        }
-                        catch(NoSuchElementException e)
-                        {
-                        }
-                        
-                        tempNode.calcLeafCnt();
-                        currentLevel.add(tempNode);
-                    }
-                    
-                    previousLevel = currentLevel;
-                }
-                
-                try
-                {
-                    root = (OTree_Node)previousLevel.firstElement();
-                }
-                catch(NoSuchElementException e)
-                {                    
-                }
-        }
-        
+	/** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
+	 *  and, after taking a number between two and three, generate a number of non-leaf, which
+	*/
+	private void create(List<OTree_Elem> leafNodes, Signature signer){
+		// previous (lower) level of tree, to be assigned
+		ArrayList<OTree_Elem> previousLevel;
+		// current level of tree that is being built
+		ArrayList<OTree_Elem> currentLevel;
+		
+		// Initialize with leaf nodes that have already been constructed
+		previousLevel = new ArrayList<OTree_Elem>(leafNodes);
+		
+		// loop while more than a single node in tree
+		// using a do while will not allow a tree that consists of only a single leaf
+		// will instead have a single internal node root with a single child leaf
+		do {
+			// create new level list
+			currentLevel = new ArrayList<OTree_Elem>();
+			// iterate previous level and assign all nodes to a parent
+			for(int i=0; i<previousLevel.size();){
+				// create a parent node
+				OTree_Node newNode = new OTree_Node();
+				// get random degree
+				int rndDegree = (rndSrc.get().nextBoolean()) ? 2 : 3;
+				// restrict degree with remaining nodes
+				rndDegree = (rndDegree<previousLevel.size()-i) ? rndDegree : previousLevel.size()-i;
+				// assign each node as a child node
+				for (int j=0; j<rndDegree; j++){
+					// link previous level node to new node as child
+					newNode.addChild(previousLevel.get(i));
+					previousLevel.get(i).setParent(newNode);
+					// increment index
+					i++;
+				}
+				// update new node signature
+				updateSig(newNode, signer);
+				// add new node to current level
+				currentLevel.add(newNode);
+			}
+			// replace previous level list with current to repeat
+			previousLevel = currentLevel;
+		} while (previousLevel.size() > 1);
+		
+		// when escapes loop must have exactly one node in
+		// previousLevel, make that node the root of tree
+		this.root = (OTree_Node) previousLevel.get(0);
+	}
+	
         /**
          * 
          * @param int i
