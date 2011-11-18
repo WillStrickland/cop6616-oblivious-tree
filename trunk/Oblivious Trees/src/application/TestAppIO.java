@@ -126,7 +126,7 @@ public class TestAppIO {
 			output.write(writeActors(actors));
 			// close file
 			output.close();
-		} catch (Exception e){}
+		} catch (IOException e){}
 	}
 	/** Writes multi-test log information out to a specified file.
 	 *  Meant for multiple test runs, does not print act log and is not compatible with scanLogFile above.
