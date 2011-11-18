@@ -43,18 +43,28 @@ public class RandomActor extends TestActor {
 	 *  execute appropriate actions.
 	 */
 	public void run(){
+		// make sure test is valid
 		if (this.test!=null){
+			// while there are still actions left to do
 			while (this.actCnt>0){
+				// if use timing set then make a delay queue to orchestrate actions
 				if(this.useTiming){
 					try{
+						// sleep for a randomized amount of time
 						Thread.sleep(rnd.nextInt(RandomActor.MAX_SLEEP));
 					} catch (InterruptedException e){ }
 				}
+				// execute a random actionand record the result
 				Act a = this.test.buttonMash();
 				a.setCaller(this);
+				// add this action to the list
 				this.actions.add(a);
+				// decrement action remaining count
 				this.actCnt--;
 			}
+			// notify the main thread waiting on the
+			// test object that this actor has completed
+			test.notifyActorComplete();
 		}
 	}
 	

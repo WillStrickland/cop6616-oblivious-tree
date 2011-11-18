@@ -46,6 +46,9 @@ public class ScriptedActor extends TestActor {
 					this.test.buttonPush(this.actions.get(i));
 				}
 			}
+			// notify the main thread waiting on the
+			// test object that this actor has completed
+			test.notifyActorComplete();
 		}
 	}
 	

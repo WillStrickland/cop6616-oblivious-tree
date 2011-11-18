@@ -1,8 +1,10 @@
 package application;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import application.Act.OpType;
 
@@ -28,12 +31,15 @@ import oblivious.sequential.SequentialObliviousTree;
 public class TestApplication {
 
 	// Some state stuff
-	Random rnd;
+	private Random rnd;
 	// get signature objects for signing and verifying: [0] signing, [1] verifying
-	Signature[] signatures;
-	ObliviousTree tree;
-	byte[] file;
-	long startTime;
+	private Signature[] signatures;
+	private ObliviousTree tree;
+	private byte[] file;
+	private String outFile;
+	private long startTime;
+	private AtomicInteger ActorCnt;
+
 	
 	/** default constructor 
 	 */
@@ -53,7 +59,7 @@ public class TestApplication {
 	/** TestApplication constructor
 	 * @param filesize size of random input to use
 	 */
-	public TestApplication(int filesize){
+	public TestApplication(int filesize, String outfile){
 		// rnd and crypto
 		rnd = initPRNG();
 		signatures = initSignature();
@@ -62,6 +68,8 @@ public class TestApplication {
 		rnd.nextBytes(file);
 		// build tree
 		tree = new SequentialObliviousTree(file, signatures[0]);
+		// set output file name
+		this.outFile = outfile;
 		// set start time
 		startTime = System.currentTimeMillis();
 	}
@@ -155,25 +163,83 @@ public class TestApplication {
 	}
 	/** code for having random threads do random inserts and deletes on a shared oblivious tree
 	 */
-	private static String testRndActors(){
-		// generate test application
-		TestApplication test = new TestApplication();
-		
-		int Actor_Actions = 10;
-		RandomActor[] Actors = new RandomActor[10];
+	private static void testRndActors(String outFileName){
+		// set run parameters
+		int actor_count = 10;
+		int actor_actions = 10;
+		// generate test instance
+		TestApplication test = new TestApplication(1000, outFileName);
 		// initalize actors
+		RandomActor[] Actors = new RandomActor[actor_count];
 		for (int i=0; i<Actors.length; i++){
 			Actors[i] = new RandomActor();
-			Actors[i].setActCnt(Actor_Actions);
+			Actors[i].setActCnt(actor_actions);
 			Actors[i].setTest(test);
 		}
+		// record start time
+		long startTime = System.currentTimeMillis();
 		// start actors running
-		for(int i=0; i<Actors.length; i++){
-			Actors[i].run();
+		test.ActorCnt.set(Actors.length);
+		for(TestActor a : Actors){
+			a.run();
 		}
+		// wait until all actors have completed
+		while (test.ActorCnt.get()>0){
+			try {
+				test.wait();
+			} catch (Exception e) {}
+		}
+		// record end time
+		long endTime = System.currentTimeMillis();
+		// gather up results and write out to file
+		try {
+			// open/create file
+			BufferedWriter output = new BufferedWriter(new FileWriter(test.outFile));
+			// output runtime (in milliseconds)
+			output.write(endTime-startTime+"\n");
+			// output all actions by all actors
+			for (TestActor actor : Actors){
+				for (Act a : actor.actions){
+					output.write(a.toString());
+				}
+			}
+
+			// close file
+			output.close();
+		} catch (Exception e){}
 		
 	}
-	/** code for testing the instance methods for Act.scanByteArray
+	
+	/** MUSTRUN code for testing the instance methods for Act.scanByteArray
+	 */
+	private static void testObliviousMethods(){
+		int action_count = 1000; // number of actions to perform
+		boolean showS = false;	// show successful case output
+		boolean showF = true;	// show failure case output
+		// generate test instance
+		TestApplication test = new TestApplication(1000, "iamtheverymodelofamodernmajorgeneral");
+		// test to make sure oblivious tree created valid
+		boolean valid = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
+		System.out.println("0\tTreeCreate\t - Valid="+valid);
+		// for specified number of actions
+		for (int i=0; i<action_count; i++){
+			// perform a random action
+			Act tmp = test.buttonMash();
+			// check to make sure that the tree is still valid
+			valid = ObliviousTree.signatureVerify(test.file, test.tree.signatureGenerate(), test.signatures[1]);
+			if (valid && showS){
+				//System.out.println(i+"\t"+tmp.getOperation()+" - Valid="+valid+"\t"+tmp);
+			} else if (!valid && showF){
+				System.out.println(i+"\t"+tmp.getOperation()+" - Valid="+valid+"\t"+tmp);
+				//break;
+			}
+		}
+		
+		
+		
+	}
+	
+	/** SUCCESSFUL code for testing the instance methods for Act.scanByteArray
 	 */
 	private static void testActMethods_scanAct(){
 		Random rnd = initPRNG();	// Random source
@@ -194,7 +260,7 @@ public class TestApplication {
 			System.out.print("failure\n"+tmp1+"\n"+tmp2+"\n");
 		}
 	}
-	/** code for testing the instance methods for Act.scanByteArray
+	/** SUCCESSFUL code for testing the instance methods for Act.scanByteArray
 	 */
 	private static void testActMethods_scanByteArray(){
 		Random rnd = initPRNG();	// Random source
@@ -445,7 +511,7 @@ public class TestApplication {
 		}
 		return a;
 	}
-	/** execute scripted action described by Act
+	/** Execute scripted action described by Act
 	 *  @param a Action to perform on instance oblivious tree
 	 */
 	public void buttonPush(Act a){
@@ -463,7 +529,13 @@ public class TestApplication {
 				break;
 		}	
 	}
+	/** Used to notify the main method that an actor has completed.
+	 *  decrements the actor count and notifies the main (which 
+	 *  will be waiting on this test object).
+	 */
+	public void notifyActorComplete(){
+		this.ActorCnt.decrementAndGet();
+		this.notify();
+	}
 	
-	
-
 }
