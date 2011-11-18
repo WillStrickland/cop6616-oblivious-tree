@@ -22,7 +22,6 @@ import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import application.Act.OpType;
-
 import oblivious.ObliviousTree;
 import oblivious.concurrent.ConcurrentObliviousTree;
 import oblivious.sequential.SequentialObliviousTree;

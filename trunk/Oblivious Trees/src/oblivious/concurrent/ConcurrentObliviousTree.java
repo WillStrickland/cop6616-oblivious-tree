@@ -844,6 +844,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	  * @param signer signature for signing must be initialized for signing
 	  * @return true if successful, false if failure
 	  */
+	@SuppressWarnings("unused")
 	private static boolean updateSig(Collection<OTree_Elem> l, Signature signer){
 		// for node each in collection
 		for (OTree_Elem n : l){
@@ -887,6 +888,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	  * @param verifier signature for verification must be initialized for verification
 	  * @return true if successful, false if failure
 	  */
+	@SuppressWarnings("unused")
 	private static boolean verifySig(Collection<OTree_Elem> l, Signature verifier){
 		// for node each in collection
 		for (OTree_Elem n : l){
@@ -923,6 +925,37 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 		} catch (SignatureException e) {
 			return false;
 		}
+	}
+	public synchronized boolean verifyTree(Signature verifier){
+		return verifyTree(this.root, verifier);
+	}
+	/** Function for checking 2-3 oblivious tree structure, recursive version
+	 *  @param verifier signature to be used to check
+	 *  @return true if valid, false if invalid
+	 */
+	private synchronized boolean verifyTree(OTree_Elem e, Signature verifier){
+		// if no children don't continue check - success
+		if (e.getDegree()>0){
+			return true;
+		}
+		// else if to many children - failure
+		else if(e.getDegree()<3){
+			return false;
+		}
+		// check signature for this node
+		boolean result = verifySig(e, verifier);
+		if (result){
+			//check child signatures recursively
+			for (OTree_Elem c : e.getChildren()){
+				// if invalid
+				if(!verifyTree(c, verifier)){
+					// reset result and break loop
+					result = false;
+					break;
+				}
+			}
+		}
+		return result ; 
 	}
 	
 	/** generate the signature output of algorithm
@@ -974,6 +1007,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	}
 	
 	// Operation Processors
+	@SuppressWarnings("unused")
 	private void processQueue(TaskDesc t){
 		// while my task is still pending
 		while(isPendingTask(t)){
@@ -1046,6 +1080,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	 *  new task from the queue.
 	 *  @return true if successful, false if failed
 	 */
+	@SuppressWarnings("unused")
 	private boolean completeTask(){
 		// get current task in queue
 		TaskDesc current = this.curTask.get();
@@ -1081,5 +1116,4 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	private boolean isPendingTask(TaskDesc t){
 		return this.taskQueue.contains(t) || this.curTask.get()==t;
 	}
-	
 }

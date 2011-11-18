@@ -8,6 +8,8 @@ import java.security.Signature;
 import java.util.Arrays;
 import java.util.Random;
 
+import oblivious.sequential.OTree_Elem;
+
 /** Oblivious Tree - COP 6616
  * @author William Strickland and Chris Fontaine
  * @version Abstract Class of Sequential and Concurrent Implementations
@@ -22,6 +24,11 @@ public abstract class ObliviousTree {
 	abstract public void delete(int i, Signature signer);
 	abstract public byte[] signatureGenerate();
 	abstract public int getSize();
+	/** Function for checking 2-3 oblivious tree structure
+	 *  @param verifier signature to be used to check
+	 *  @return true if valid, false if invalid
+	 */
+	abstract public boolean verifyTree(Signature verifier);
 
 	// Class Methods
 	/** verify if a signature is correct given the file and public key
