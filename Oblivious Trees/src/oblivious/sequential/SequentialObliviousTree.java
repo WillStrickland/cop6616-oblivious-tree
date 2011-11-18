@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -218,6 +219,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             {
                 ithParent = (OTree_Node)ithParent.getParent();
                 currentNode = ithParent;
+                toUpdate.add(currentNode);
                 
                 if(ithParent.getNeighbor() == null)
                 {
@@ -240,6 +242,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                         root.setParent(newRoot);
                         newNode.setParent(newRoot);
                         root = newRoot;
+                        toUpdate.add(root);
                         
                         /*
                          * According to the Structural Agreement lemma, we're 
@@ -269,7 +272,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                              */
                             newNode = new OTree_Node();
                             currentNode.setNeighbor(newNode);
-                            
+                            toUpdate.add(newNode);
                             for(int migrate = 0; migrate < w; migrate++)
                             {
                                 newNode.addChild(currentNode.getChild(currentNode.getDegree() - 1));
@@ -282,6 +285,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                         else
                         {
                             neighbor = (OTree_Node)currentNode.getNeighbor();
+                            toUpdate.add(neighbor);
                             /*
                              * randomDegree, in this case, is equivalent to a 
                              * newDegree for the node.
@@ -338,6 +342,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             {
                 currentNode = ithParent;
                 ithParentChildren = ithParent.getChildren();
+                toUpdate.add(currentNode);
                 
                 for(int match = 0; match < ithParentChildren.length; i++)
                 {
@@ -364,6 +369,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                         randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
                         neighbor = (OTree_Node)currentNode.getNeighbor();
                         oldDegree = neighbor.getDegree();
+                        toUpdate.add(neighbor);
                         
                         if(w >= oldDegree)
                         {
@@ -513,7 +519,9 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	  * @param signer signature for signing must be initialized for signing
 	  * @return true if successful, false if failure
 	  */
-	private static boolean updateSig(Collection<OTree_Elem> l, Signature signer){
+	private static boolean updateSig(List<OTree_Elem> l, Signature signer){
+		// run test to make sure properly assigning update list
+		updateSigCheck(l);
 		// for node each in collection
 		for (OTree_Elem n : l){
 			// run update on this node
@@ -549,6 +557,25 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 			return false;
 		}
 	}
+	/** Helper method to view the contents of the list sent to updateSig().
+	 *  Prints list values in iterator order to screen with count
+	 *  of times they occur in the list.
+	 *  @param list list of OTree_Elem to check
+	 */
+	private static void updateSigCheck(List<OTree_Elem> list){
+		System.out.println("UpdateSigCheck");
+		for (OTree_Elem a : list){
+			int cnt =0;
+			for (OTree_Elem b : list){
+				if(a==b){
+					cnt++;
+				}
+			}
+			System.out.println(a.toString()+" cnt="+cnt);
+		}
+			
+		
+	}
 	/** Verify the signature for all the OTree_Elem in list.
 	  * Method designed to operate only on internal nodes.
 	  * no limits imposed on order of nodes
@@ -556,6 +583,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	  * @param verifier signature for verification must be initialized for verification
 	  * @return true if successful, false if failure
 	  */
+	@SuppressWarnings("unused")
 	private static boolean verifySig(Collection<OTree_Elem> l, Signature verifier){
 		// for node each in collection
 		for (OTree_Elem n : l){
@@ -565,7 +593,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 				return false;
 			}
 		}
-		// return true if all succeed
+		// return true if all succeeded
 		return true;
 	}
 	/** Verify the signature for a single OTree_Elem.
@@ -593,12 +621,43 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 			return false;
 		}
 	}
+	public synchronized boolean verifyTree(Signature verifier){
+		return verifyTree(this.root, verifier);
+	}
+	/** Function for checking 2-3 oblivious tree structure, recursive version
+	 *  @param verifier signature to be used to check
+	 *  @return true if valid, false if invalid
+	 */
+	private synchronized boolean verifyTree(OTree_Elem e, Signature verifier){
+		// if no children don't continue check - success
+		if (e.getDegree()>0){
+			return true;
+		}
+		// else if to many children - failure
+		else if(e.getDegree()<3){
+			return false;
+		}
+		// check signature for this node
+		boolean result = verifySig(e, verifier);
+		if (result){
+			//check child signatures recursively
+			for (OTree_Elem c : e.getChildren()){
+				// if invalid
+				if(!verifyTree(c, verifier)){
+					// reset result and break loop
+					result = false;
+					break;
+				}
+			}
+		}
+		return result ; 
+	}
 	
 	/** generate the signature output of algorithm
 	 * outputs each node in signature as {sig_size}{sig}{degree} in depth-first preorder
 	 *  @return byte[] of current complete signature, null if failure
 	 */
-	public synchronized byte[] signatureGenerate(){
+ 	public synchronized byte[] signatureGenerate(){
 		// Initialize output holder; index at 0, initial size of 128 bytes
 		ObliviousTree.ByteOutArray sig = new ObliviousTree.ByteOutArray(0, 128);
 		SequentialObliviousTree.signatureGenerateRecurse(this.root, sig);
