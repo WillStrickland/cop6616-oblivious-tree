@@ -19,9 +19,32 @@ public abstract class ObliviousTree {
 	public static final int CHUNK_SIZE = 100;
 	
 	// Instance Methods
+	/** Inserts a new leaf into the ith position of the leaf level, then
+     *  re-randomized the tree based on the optimized insert algorithm
+     *  presented in the paper. In order to insert a new node, you must 
+     *  provide data (in the form of a byte array) and a position.
+     *  @param value byte[] data value to be inserted
+     *  @param i index of chunk/leaf to insert into
+     *  @param signer signature for signing new/randomized tree nodes.
+     *  @return void
+     */
 	abstract public void insert(byte[] value, int i, Signature signer);
+	/** deletes the leaf the ith position of the leaf level, then
+     *  re-randomized the tree based on the optimized delete algorithm
+     *  presented in the paper. In order to delete a node, you must provide a position.
+     *  @param i index of chunk/leaf to insert into
+     *  @param signer signature for signing new/randomized tree nodes.
+     *  @return void
+     */
 	abstract public void delete(int i, Signature signer);
+	/** generate the signature output of algorithm
+	 * outputs each node in signature as {sig_size}{sig}{degree} in depth-first preorder
+	 *  @return byte[] of current complete signature, null if failure
+	 */
 	abstract public byte[] signatureGenerate();
+	/** get number of chunks in OTree
+	 * @return int count of leafnodes/chunks in oblivious tree
+	 */
 	abstract public int getSize();
 	/** Function for checking 2-3 oblivious tree structure
 	 *  @param verifier signature to be used to check

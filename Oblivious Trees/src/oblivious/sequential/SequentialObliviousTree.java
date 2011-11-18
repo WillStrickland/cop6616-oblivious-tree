@@ -60,7 +60,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	 *  @param byte[] file
 	 *  @return void
 	 */
-	private synchronized void generateLeaves(FileInputStream file, Signature signer){	
+	private void generateLeaves(FileInputStream file, Signature signer){	
 		int this_size;
 		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
 		treeNodes.clear();
@@ -88,7 +88,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	 *  @param byte[] file
 	 *  @return void
 	 */
-	private synchronized void generateLeaves(byte[] file, Signature signer){	
+	private void generateLeaves(byte[] file, Signature signer){	
 		int this_size=0;
 		// clear current leaves
 		treeNodes.clear();
@@ -109,7 +109,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
         /** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
          *  and, after taking a number between two and three, generate a number of non-leaf, which
          */
-        private synchronized final void create(Signature signer)
+        private void create(Signature signer)
         {
                 int randomDegree;
                 int numOfNodesAtLevel;
@@ -184,16 +184,6 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                 {                    
                 }
         }
-        
-        /** Inserts a new leaf into the ith position of the leaf level, then
-         *  re-randomized the tree based on the optimized insert algorithm
-         *  presented in the paper. In order to insert a new node, you must 
-         *  provide data (in the form of a byte array) and a position.
-         *  @param byte[] value data value to be inserted
-         *  @param int i index of chunk/leaf to insert into
-         *  @param Signature signer signature for signing new/randomized tree nodes.
-         *  @return void
-         */
         public synchronized void insert(byte[] value, int i, Signature signer)
         {
             i = i - 1;
@@ -320,14 +310,6 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             // update signatures of all nodes touched in this operation
             updateSig(toUpdate, signer);
         }
-        
-        /** deletes the leaf the ith position of the leaf level, then
-         *  re-randomized the tree based on the optimized delete algorithm
-         *  presented in the paper. In order to delete a node, you must provide a position.
-         *  @param int i index of chunk/leaf to insert into
-         *  @param Signature signer signature for signing new/randomized tree nodes.
-         *  @return void
-         */
         public synchronized void delete(int i,  Signature signer)
         {
             i = i - 1;
@@ -415,7 +397,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
          * @param int level
          * @return OTree_Node neighbor
          */
-        public synchronized OTree_Node getNeighbor(OTree_Node node, int level)
+        private synchronized OTree_Node getNeighbor(OTree_Node node, int level)
         {
             OTree_Node parent = (OTree_Node)node.getParent();
             OTree_Node previous = node;
@@ -504,9 +486,6 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             return neighbor;            
         }
         
-	/** get number of chunks in OTree
-	 * @return int count of leafnodes/chunks in oblivious tree
-	 */
 	public synchronized int getSize(){
 		//return root.getLeafCnt();		// tree version
 		return this.treeNodes.size();	// vector version
@@ -653,10 +632,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 		return result ; 
 	}
 	
-	/** generate the signature output of algorithm
-	 * outputs each node in signature as {sig_size}{sig}{degree} in depth-first preorder
-	 *  @return byte[] of current complete signature, null if failure
-	 */
+
  	public synchronized byte[] signatureGenerate(){
 		// Initialize output holder; index at 0, initial size of 128 bytes
 		ObliviousTree.ByteOutArray sig = new ObliviousTree.ByteOutArray(0, 128);

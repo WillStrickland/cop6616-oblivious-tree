@@ -71,7 +71,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	 *  @param signer signature to be used for signing leaves
 	 *  @return list of leaves created
 	 */
-	private synchronized Vector<OTree_Elem> generateLeaves(FileInputStream file, Signature signer){
+	private Vector<OTree_Elem> generateLeaves(FileInputStream file, Signature signer){
 		int this_size;
 		Vector<OTree_Elem> tmp = new Vector<OTree_Elem>();
 		byte[] chunk = new byte[ObliviousTree.CHUNK_SIZE];
@@ -101,7 +101,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
 	 *  @param signer signature to be used for signing leaves
 	 *  @return list of leaves created
 	 */
-	private synchronized Vector<OTree_Elem> generateLeaves(byte[] file, Signature signer){
+	private Vector<OTree_Elem> generateLeaves(byte[] file, Signature signer){
 		int this_size=0;
 		Vector<OTree_Elem> tmp = new Vector<OTree_Elem>();
 		// clear current leaves
@@ -123,7 +123,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
         /** Oblivious are generated from the ground up. Meaning we take a number of leaf nodes
          *  and, after taking a number between two and three, generate a number of non-leaf, which
          */
-        private synchronized final void create(Vector<OTree_Elem> leaves, Signature signer)
+        private void create(Vector<OTree_Elem> leaves, Signature signer)
         {
                 Random this_rnd = rndSrc.get();
                 int randomDegree;
@@ -244,13 +244,6 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
             
         }
         
-        /**
-         * 
-         * @param byte[] value
-         * @param int i
-         * @param Signature signer
-         * @return void
-         */
         public void concurrentInsert(TaskDesc t)
         {
             Random this_rnd = rndSrc.get();
@@ -457,17 +450,6 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
             
         }
         
-        /*
-         * 
-         * @param byte[] value
-         * @param int i
-         * @param Signature signer
-         * @return void
-         * 
-         * Inserts a new leaf into the ith position of the leaf level, then
-         * re-randomized the tree based on the optimized insert algorithm
-         * presented.
-         */ //
         public synchronized void newInsert(byte[] value, int i, Signature signer)
         {
             Random this_rnd = rndSrc.get();
@@ -718,19 +700,6 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
             taskQueue.add(task_descriptor);
 	} //*/
         
-        /*
-         * Updates the size information of all nodes along the path from the root
-         * to the leaf node i
-         */
-        public synchronized void updateSizes(int i)
-        {
-            
-        }
-        
-        public synchronized void updateHashes(int i)
-        {
-            
-        }
         
         /**
          * Returns either the node following the given node at its given level
@@ -740,7 +709,7 @@ public class ConcurrentObliviousTree extends oblivious.ObliviousTree{
          * @param int level
          * @return OTree_Node neighbor
          */
-        public synchronized OTree_Node getNeighbor(OTree_Node node, int level)
+        private synchronized OTree_Node getNeighbor(OTree_Node node, int level)
         {
             OTree_Node parent = (OTree_Node)node.getParent();
             OTree_Node previous = node;
