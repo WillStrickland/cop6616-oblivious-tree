@@ -207,6 +207,13 @@ public class TestApplication {
 						}
 					}
 				}
+				if(summary && summaryOut!=null){
+					try {
+						summaryOut.flush();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 		}
 		// close file
