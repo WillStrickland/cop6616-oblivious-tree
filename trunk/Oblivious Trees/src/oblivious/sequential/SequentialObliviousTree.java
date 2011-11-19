@@ -163,7 +163,7 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
             OTree_Leaf newLeaf = new OTree_Leaf();
             OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
-            OTree_Node currentNode, previousNode, newNode, currentNeighbor;
+            OTree_Node currentNode, previousNode, newNode, currentNeighbor, unassignedNode;
             int w, randomDegree, oldDegree, degree, firstChildIndex, reattach, childIndex;
             boolean skipLevel = false;
             ArrayList<OTree_Elem> toUpdate = new ArrayList<OTree_Elem>();
@@ -212,7 +212,9 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                     {
                         if(unassigned.size() > 0)
                         {
-                            currentNode.addChild(unassigned.remove(0));                    
+                            unassignedNode = (OTree_Node)unassigned.remove(0);
+                            currentNode.addChild(unassignedNode);
+                            unassignedNode.setParent(currentNode);
                         }
                         else
                         {   
@@ -254,9 +256,13 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                 {
                     OTree_Node newRoot = new OTree_Node();
                     OTree_Node oldRoot = root;
+                    unassignedNode = (OTree_Node)unassigned.remove(0);
                     
                     newRoot.addChild(root);
-                    newRoot.addChild(unassigned.remove(0));
+                    newRoot.addChild(unassignedNode);
+                    root.setParent(newRoot);
+                    unassignedNode.setParent(newRoot);
+                    
                     root = newRoot;                                        
                 }
                 
