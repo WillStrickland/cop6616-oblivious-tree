@@ -159,10 +159,23 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 	// Primary methods
         public synchronized void insert(byte[] value, int i, Signature signer)
         {
-            i = i - 1;
-            OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
+
+            OTree_Node ithParent;
+            OTree_Leaf ithLeaf;
+            
+            try
+            {
+                ithLeaf = (OTree_Leaf)treeNodes.get(i);
+                ithParent = (OTree_Node)ithLeaf.getParent();
+            }
+            catch(IndexOutOfBoundsException e)
+            {
+                ithParent = (OTree_Node)treeNodes.get(treeNodes.size() - 1).getParent();
+            }
+            
+            
             OTree_Leaf newLeaf = new OTree_Leaf();
-            OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
+            
             OTree_Node currentNode, previousNode, newNode, currentNeighbor;
             OTree_Elem unassignedNode;
             int w, randomDegree, oldDegree, degree, firstChildIndex, reattach, childIndex;
