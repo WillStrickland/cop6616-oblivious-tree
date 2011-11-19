@@ -182,10 +182,13 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             unassigned.add(ithParent.getChild(degree - 1));
             ithParent.removeChild(degree - 1);
             
+            ithParent.addChild(newLeaf);
+            newLeaf.setParent(ithParent);
+            
             firstChildIndex = treeNodes.indexOf(ithParent.getChild(0));
             treeNodes.add(i, newLeaf);
-            newLeaf.setParent(ithParent);
-            ithParent.addChild(newLeaf);
+            
+            
             
             if(i == firstChildIndex)
             {
