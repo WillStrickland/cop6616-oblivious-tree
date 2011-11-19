@@ -163,126 +163,228 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             OTree_Leaf ithLeaf = (OTree_Leaf)treeNodes.get(i);
             OTree_Leaf newLeaf = new OTree_Leaf();
             OTree_Node ithParent = (OTree_Node)ithLeaf.getParent();
-            OTree_Node currentNode, newNode, newRoot, neighbor;
-            int w, randomDegree, oldDegree;
+            OTree_Node currentNode, previousNode, newNode, currentNeighbor;
+            int w, randomDegree, oldDegree, degree, firstChildIndex, reattach, childIndex;
+            boolean skipLevel = false;
             ArrayList<OTree_Elem> toUpdate = new ArrayList<OTree_Elem>();
+            ArrayList<OTree_Elem> unassigned = new ArrayList<OTree_Elem>();
+            OTree_Elem[] children;
             
             try{
                  signer.update(value);
                  newLeaf.setSig(signer.sign());
             } catch (Exception e){}
-            ithParent.addChild(newLeaf);
-            newLeaf.setParent(ithParent);
+            
+            degree = ithParent.getDegree();
+            unassigned.add(ithParent.getChild(degree - 1));
+            ithParent.removeChild(degree - 1);
+            
+            firstChildIndex = treeNodes.indexOf(ithParent.getChild(0));
             treeNodes.add(i, newLeaf);
+            newLeaf.setParent(ithParent);
             
-            randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+            if(i == firstChildIndex)
+            {
+                for(reattach = i, childIndex = 0; childIndex < degree; reattach++, childIndex++)
+                {
+                    ithParent.setChild(childIndex, treeNodes.get(reattach));
+                }
+            }
+            else
+            {
+                for(reattach = firstChildIndex, childIndex = 0; childIndex < degree; reattach++, childIndex++)
+                {
+                    ithParent.setChild(childIndex, treeNodes.get(reattach));
+                }
+            }
             
+            currentNode = (OTree_Node)ithParent.getNeighbor();
+            previousNode = ithParent;
+            
+            while(ithParent != root)
+            {                
+                while(currentNode != null)
+                {
+                    skipLevel = false;
+                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+                    
+                    for(int transferRand = 0; transferRand < randomDegree; transferRand++)
+                    {
+                        if(unassigned.size() > 0)
+                        {
+                            currentNode.addChild(unassigned.remove(0));                    
+                        }
+                        else
+                        {   
+                            skipLevel = true;
+                            break;
+                        }
+                        
+                        if(currentNode.getDegree() > randomDegree)
+                        {
+                            if((currentNode.getDegree() - 1) == randomDegree)
+                            {
+                                unassigned.add(currentNode.getChild(currentNode.getDegree() - 1));
+                                currentNode.removeChild(currentNode.getDegree() - 1);
+                                break;
+                            }
+                            else
+                            {
+                                unassigned.add(currentNode.getChild(currentNode.getDegree() - 1));
+                                currentNode.removeChild(currentNode.getDegree() - 1);
+                            }
+
+                        }
+                    }
+                    
+                    if(skipLevel)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        previousNode = currentNode;
+                        currentNode = (OTree_Node)currentNode.getNeighbor();
+                    }                    
+                }
+                
+                if(unassigned.size() > 0)
+                {
+                    OTree_Node newRoot = new OTree_Node();
+                    OTree_Node oldRoot = root;
+                    
+                    newRoot.addChild(root);
+                    newRoot.addChild(unassigned.remove(0));
+                    root = newRoot;                                        
+                }
+                
+                ithParent = (OTree_Node)ithParent.getParent();
+                currentNode = ithParent;
+                previousNode = ithParent;
+            }
             /*
              * The algorithm keeps going up level by level until we pass the
              * root, at which point we stop
              */
-            while(ithParent.getParent() != null)
-            {
-                ithParent = (OTree_Node)ithParent.getParent();
-                currentNode = ithParent;
-                toUpdate.add(currentNode);
-                
-                if(ithParent.getNeighbor() == null)
-                {
-                    /*
-                     * If the node has no neighbor, then it is a node on the right
-                     * spine, which means we treat it as a 'special case'.
-                     */
-                    if(ithParent.getDegree() == 2 || (ithParent.getDegree() == 3 && randomDegree == 3))
-                    {
-                        newNode = new OTree_Node();
-                        newRoot = new OTree_Node();
-                        
-                        root.setNeighbor(newNode);
-                        newNode.addChild(root.getChild(root.getDegree() - 1));
-                        root.getChild(root.getDegree() - 1).setParent(newNode);
-                        root.removeChild(root.getDegree() - 1);
-                        
-                        newRoot.addChild(root);
-                        newRoot.addChild(newNode);
-                        root.setParent(newRoot);
-                        newNode.setParent(newRoot);
-                        root = newRoot;
-                        toUpdate.add(root);
-                        
-                        /*
-                         * According to the Structural Agreement lemma, we're 
-                         * finished because all nodes are accounted for. We just
-                         * need to update the size information along the path
-                         * from the leaf to the root.
-                         */
-                    }
-                    
-                }
-                else
-                {
-                    w = 1;
-                    
-                    while(w > 0)
-                    {
-                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
-                        
-                        if(randomDegree == w || currentNode.getNeighbor() == null)
-                        {
-                            /*
-                             * If you've hit the end of the level and you still
-                             * have nodes accounted for, then you need to create
-                             * a new node and attach any outstanding nodes to 
-                             * it as its children. This effectively increases 
-                             * the 'span' of the level by 1.
-                             */
-                            newNode = new OTree_Node();
-                            currentNode.setNeighbor(newNode);
-                            toUpdate.add(newNode);
-                            for(int migrate = 0; migrate < w; migrate++)
-                            {
-                                newNode.addChild(currentNode.getChild(currentNode.getDegree() - 1));
-                                currentNode.getChild(currentNode.getDegree() - 1).setParent(newNode);
-                                currentNode.removeChild(currentNode.getDegree() - 1);
-                            }
-                            
-                            w = 0;
-                        }
-                        else
-                        {
-                            neighbor = (OTree_Node)currentNode.getNeighbor();
-                            toUpdate.add(neighbor);
-                            /*
-                             * randomDegree, in this case, is equivalent to a 
-                             * newDegree for the node.
-                             */
-                            //randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
-                            oldDegree = neighbor.getDegree();
-                            
-                            for(int migrate = 0; migrate < w; migrate++)
-                            {
-                                neighbor.addChild(currentNode.getChild(currentNode.getDegree() - 1));
-                                currentNode.getChild(currentNode.getDegree() - 1).setParent(neighbor);
-                                currentNode.removeChild(currentNode.getDegree() - 1);
-                            }
-                            
-                            /*
-                             * Take the original degree of the node, add however
-                             * many nodes you added to it, and subtract it by 
-                             * its new degree. If this is 0, then all nodes are 
-                             * accounted for (AT THAT LEVEL).
-                             * 
-                             * Ex: If the node originally had degree 3, and you
-                             * roll a new degree of 3, then you'll wind up with
-                             * an extra node floating around. So you have to 
-                             * keep going.
-                             */
-                            w = java.lang.Math.max(0, ((oldDegree + w) - randomDegree));
-                            currentNode = neighbor;
-                        }
-                    }
-                }
-            }
+            
+//            while(ithParent != root)
+//            {
+//                currentNode = ithParent;
+//                
+//                toUpdate.add(currentNode);
+//                
+//                while(currentNode.getNeighbor() != null)
+//                {
+//                    currentNeighbor = (OTree_Node)currentNode.getNeighbor();
+//                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+//                    
+//                    
+//                    
+//                }   
+//                
+//                ithParent = (OTree_Node)ithParent.getParent();
+//            }
+//            while(ithParent.getParent() != null)
+//            {
+//                ithParent = (OTree_Node)ithParent.getParent();
+//                currentNode = ithParent;
+//                toUpdate.add(currentNode);
+//                
+//                if(ithParent.getNeighbor() == null)
+//                {
+//                    /*
+//                     * If the node has no neighbor, then it is a node on the right
+//                     * spine, which means we treat it as a 'special case'.
+//                     */
+//                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+//                    
+//                    if(ithParent.getDegree() == 2 || (ithParent.getDegree() == 3 && randomDegree == 3))
+//                    {
+//                        newNode = new OTree_Node();
+//                        newRoot = new OTree_Node();
+//                        
+//                        root.setNeighbor(newNode);
+//                        newNode.addChild(root.getChild(root.getDegree() - 1));
+//                        root.getChild(root.getDegree() - 1).setParent(newNode);
+//                        root.removeChild(root.getDegree() - 1);
+//                        
+//                        newRoot.addChild(root);
+//                        newRoot.addChild(newNode);
+//                        root.setParent(newRoot);
+//                        newNode.setParent(newRoot);
+//                        root = newRoot;
+//                        toUpdate.add(root);
+//                        
+//                        /*
+//                         * According to the Structural Agreement lemma, we're 
+//                         * finished because all nodes are accounted for. We just
+//                         * need to update the size information along the path
+//                         * from the leaf to the root.
+//                         */
+//                    }
+//                    
+//                }
+//                else
+//                {
+//                    w = 1;                    
+//                    randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;                     
+//                        
+//                    if(randomDegree == w || currentNode.getNeighbor() == null)
+//                    {
+//                        /*
+//                         * If you've hit the end of the level and you still
+//                         * have nodes accounted for, then you need to create
+//                         * a new node and attach any outstanding nodes to 
+//                         * it as its children. This effectively increases 
+//                         * the 'span' of the level by 1.
+//                         */
+//                        newNode = new OTree_Node();
+//                        currentNode.setNeighbor(newNode);
+//                        toUpdate.add(newNode);
+//                        for(int migrate = 0; migrate < w; migrate++)
+//                        {
+//                            newNode.addChild(currentNode.getChild(currentNode.getDegree() - 1));
+//                            currentNode.getChild(currentNode.getDegree() - 1).setParent(newNode);
+//                            currentNode.removeChild(currentNode.getDegree() - 1);
+//                        }
+//
+//                        w = 0;
+//                    }
+//                    else
+//                    {
+//                        neighbor = (OTree_Node)currentNode.getNeighbor();
+//                        toUpdate.add(neighbor);
+//                        /*
+//                         * randomDegree, in this case, is equivalent to a 
+//                         * newDegree for the node.
+//                         */
+//                        //randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
+//                        oldDegree = neighbor.getDegree();
+//
+//                        for(int migrate = 0; migrate < w; migrate++)
+//                        {
+//                            neighbor.addChild(currentNode.getChild(currentNode.getDegree() - 1));
+//                            currentNode.getChild(currentNode.getDegree() - 1).setParent(neighbor);
+//                            currentNode.removeChild(currentNode.getDegree() - 1);
+//                        }
+//
+//                        /*
+//                         * Take the original degree of the node, add however
+//                         * many nodes you added to it, and subtract it by 
+//                         * its new degree. If this is 0, then all nodes are 
+//                         * accounted for (AT THAT LEVEL).
+//                         * 
+//                         * Ex: If the node originally had degree 3, and you
+//                         * roll a new degree of 3, then you'll wind up with
+//                         * an extra node floating around. So you have to 
+//                         * keep going.
+//                         */
+//                        w = java.lang.Math.max(0, ((oldDegree + w) - randomDegree));
+//                        currentNode = neighbor;
+//                    }
+//                    
+//                }
+//            }
             // update signatures of all nodes touched in this operation
             updateSig(toUpdate, signer);
         }
