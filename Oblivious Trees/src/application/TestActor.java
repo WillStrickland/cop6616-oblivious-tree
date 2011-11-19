@@ -34,8 +34,8 @@ public abstract class TestActor implements Runnable {
 		// make a new list of same size
 		this.actions = new ArrayList<Act>(acts.size());
 		// copy individual act records into new list
-		for (int i=0; i<this.actions.size(); i++){
-			this.actions.set(i, acts.get(i).clone());
+		for (int i=0; i<acts.size(); i++){
+			this.actions.add(acts.get(i).clone());
 		}
 	}
 	/** Sets list actions this RandomActor has performed
@@ -46,8 +46,8 @@ public abstract class TestActor implements Runnable {
 		// make a new list of same size
 		this.actions = new ArrayList<Act>(acts.length);
 		// copy individual act records into new list
-		for (int i=0; i<this.actions.size(); i++){
-			this.actions.set(i, acts[i].clone());
+		for (int i=0; i<acts.length; i++){
+			this.actions.add(acts[i].clone());
 		}
 	}
 	/** set the useTiming flag to determine if Actor will generate/obey

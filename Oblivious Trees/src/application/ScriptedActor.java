@@ -35,15 +35,19 @@ public class ScriptedActor extends TestActor {
 				// process every action in order as they pop from delay queue
 				while (!queue.isEmpty()){
 					try{
+						// get next action that has popped
 						Act tmp = queue.take();
-						test.buttonPush(tmp);
+						// return the new action
+						Act tmp2 = test.buttonPush(tmp);
+						// replace the old action with the new action
+						this.actions.set(this.actions.indexOf(tmp), tmp2);
 					} catch (InterruptedException e){}
 				}
 			}
 			// run tests back to back at full speed
 			else {
 				for(int i=0; i<this.actions.size(); i++){
-					this.test.buttonPush(this.actions.get(i));
+					this.actions.set(i, this.test.buttonPush(this.actions.get(i)));
 				}
 			}
 			// notify the main thread waiting on the

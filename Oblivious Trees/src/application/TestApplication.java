@@ -135,15 +135,18 @@ public class TestApplication {
 	
 	// main test driver method
 	public static void main(String[] args) {
+		System.out.println("Main start");
 		//TestAppIO.testActMethods_scanAct();
 		//TestAppIO.testActMethods_scanByteArray();
 		//testObliviousMethods();
 		randomTests(false);
 		//scriptedTests(false);
+		System.out.println("Main end");
 	}
 	/** driver method for running multiple random tests to generate 
 	 */
 	private static void randomTests(boolean summary){
+		System.out.println("RandomTests start");
 		// set output file names
 		List<String> files = new ArrayList<String>();
 		files.add("testlog");
@@ -176,7 +179,7 @@ public class TestApplication {
 		BufferedWriter summaryOut = null;
 		if (summary){
 			try {
-				summaryOut = new BufferedWriter(new FileWriter(files.get(0)+".txt"));
+				summaryOut = new BufferedWriter(new FileWriter("testlog_random_all"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -205,26 +208,32 @@ public class TestApplication {
 			}
 		}
 		// close file
-		try {
-			summaryOut.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (Exception e) {}
+		if(summary){
+			try {
+				summaryOut.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("RandomTest end");
 	}
 	/** driver method for running multiple scripted tests to generate
 	 */
 	private static void scriptedTests(boolean summary){
+		System.out.println("ScriptedTests start");
 		// set input file names
 		List<String> files = new ArrayList<String>();
 		files.add("testlog_1000_8_25_0.txt");
 		files.add("testlog_5000_8_25_0.txt");
-		int trials = 3;
+		int trials = 1;
 		// in case summary, create single output file
 		BufferedWriter summaryOut = null;
-		try {
-			summaryOut = new BufferedWriter(new FileWriter(files.get(0)));
-		} catch (IOException e) {
-			e.printStackTrace();
+		if(summary){
+			try {
+				summaryOut = new BufferedWriter(new FileWriter("testlog_script_all"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		// Run every configuration for set number of trials
 		for(String fn : files){
@@ -232,7 +241,7 @@ public class TestApplication {
 				// determine tree size from file name (because I short on time)
 				int treeSize = (Integer.decode(fn.substring(fn.indexOf('_')+1, fn.indexOf('_', fn.indexOf('_')+1)))).intValue();
 				// create new test instance
-				TestApplication test = new TestApplication(treeSize,fn);							
+				TestApplication test = new TestApplication(treeSize,fn+"_s"+i);
 				// make actors and actions
 				TestActor[] actors = test.mkScriptedActors(fn, false);
 				// run tests and output results
@@ -246,11 +255,14 @@ public class TestApplication {
 			}
 		}
 		// close file
-		try {
-			summaryOut.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		if(summary){
+			try {
+				summaryOut.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+		System.out.println("ScriptedTests end");
 	}
 	
 	
@@ -258,6 +270,7 @@ public class TestApplication {
 	/** code for having random threads do random inserts and deletes on a shared oblivious tree
 	 */
 	private static void testRndActors(String outFileName){
+		/* Deprecated
 		// set run parameters
 		int actor_count = 10;
 		int actor_actions = 10;
@@ -287,8 +300,9 @@ public class TestApplication {
 		long endTime = System.currentTimeMillis();
 		// gather up results and write out to file
 		TestAppIO.writeLogFile(test.outFile, test.tree.getSize(), endTime-startTime, actorslist);
+		//*/
 	}
-	/** FAILING code for testing the instance methods for Act.scanByteArray
+	/** FAILING code for testing the instance methods ObliviousTree
 	 */
 	private static void testObliviousMethods(){
 		int action_count = 10; // number of actions to perform
@@ -376,12 +390,13 @@ public class TestApplication {
 		// create list of acts for each actor
 		ArrayList<ArrayList<Act>> ActSets = new ArrayList<ArrayList<Act>>(placement.size());
 		// Initialize first dimension of ActSets
-		for (ArrayList<Act> AL : ActSets){
-			AL = new ArrayList<Act>();
+		for (int i=0; i<placement.size(); i++){
+			ActSets.add(new ArrayList<Act>());
 		}
 		// Iterate all acts and place into correct list for correct actor using placement map
 		for (Act a : acts){
-			ActSets.get(placement.get(a.getCallerNm()).intValue()).add(a);
+			int actorNum = placement.get(a.getCallerNm()).intValue();
+			ActSets.get(actorNum).add(a);
 		}
 		// Initialize actors
 		for (int i=0; i<Actors.length; i++){
@@ -488,8 +503,14 @@ public class TestApplication {
 	 */
 	public Act buttonMash(){
 		Act a = new Act();
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		// Roll for random action
-		int act = rnd.nextInt(4); //!!! should be nextInt(11)
+		int act = rnd.nextInt(11); //!!! should be nextInt(11)
 		if (act>=0 && act<=4){
 			// position to insert
 			int i = this.rnd.nextInt(this.tree.getSize()+1);
@@ -502,7 +523,7 @@ public class TestApplication {
 			a.setData(chunk);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do insert
-			this.tree.insert(chunk, i, this.signatures[0]);
+			//this.tree.insert(chunk, i, this.signatures[0]);
 		} else if (act>=5 && act<=9){
 			// position to insert
 			int i = this.rnd.nextInt(this.tree.getSize()+1);
@@ -511,33 +532,45 @@ public class TestApplication {
 			a.setLocation(i);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do delete
-			this.tree.delete(i, this.signatures[0]);
+			//this.tree.delete(i, this.signatures[0]);
 		} else if (act>=10 && act<=10){
 			// set act parameters
 			a.setOperation(OpType.GENSIG);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do generate signatures
-			this.tree.signatureGenerate();
+			//this.tree.signatureGenerate();
 		}
 		return a;
 	}
 	/** Execute scripted action described by Act
 	 *  @param a Action to perform on instance oblivious tree
 	 */
-	public void buttonPush(Act a){
+	public Act buttonPush(Act a){
+		Act b = a.clone();
+		b.setTime(System.currentTimeMillis()-this.startTime);
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		switch (a.getOperation()){
 			case INSERT:
-				this.tree.insert(a.getData(), a.getLocation(), this.signatures[0]);
+				// do insert
+				//this.tree.insert(a.getData(), a.getLocation(), this.signatures[0]);
 				break;
 			case DELETE:
-				this.tree.delete(a.getLocation(), this.signatures[0]);
+				// do delete
+				//this.tree.delete(a.getLocation(), this.signatures[0]);
 				break;
 			case GENSIG:
-				this.tree.signatureGenerate();
+				// do gensig
+				//this.tree.signatureGenerate();
 				break;
 			default:
 				break;
-		}	
+		}
+		return b;
 	}
 	/** Used to notify the main method that an actor has completed.
 	 *  decrements the actor count and notifies the main (which 
