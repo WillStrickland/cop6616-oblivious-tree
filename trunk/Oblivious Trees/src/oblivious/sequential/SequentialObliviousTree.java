@@ -237,6 +237,8 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                         }
                     }
                     
+                    updateSig(currentNode, signer);
+                    
                     if(skipLevel)
                     {
                         break;
@@ -262,6 +264,10 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                 currentNode = ithParent;
                 previousNode = ithParent;
             }
+            
+            updateSig(root, signer);
+            
+            //updateSig(toUpdate, signer);
             /*
              * The algorithm keeps going up level by level until we pass the
              * root, at which point we stop
@@ -386,7 +392,6 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
 //                }
 //            }
             // update signatures of all nodes touched in this operation
-            updateSig(toUpdate, signer);
         }
         public synchronized void delete(int i,  Signature signer)
         {
