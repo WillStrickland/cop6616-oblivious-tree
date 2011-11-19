@@ -205,15 +205,18 @@ public class TestApplication {
 								test.runTest(actors);
 							}
 						}
+						// flush summary file after each set of trials
+						if(summary && summaryOut!=null){
+							try {
+								summaryOut.flush();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
 					}
+
 				}
-				if(summary && summaryOut!=null){
-					try {
-						summaryOut.flush();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
+
 			}
 		}
 		// close file
