@@ -187,20 +187,20 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             newLeaf.setParent(ithParent);
             ithParent.addChild(newLeaf);
             
-//            if(i == firstChildIndex)
-//            {
-//                for(reattach = i, childIndex = 0; childIndex < degree; reattach++, childIndex++)
-//                {
-//                    ithParent.setChild(childIndex, treeNodes.get(reattach));
-//                }
-//            }
-//            else
-//            {
-//                for(reattach = firstChildIndex, childIndex = 0; childIndex < degree; reattach++, childIndex++)
-//                {
-//                    ithParent.setChild(childIndex, treeNodes.get(reattach));
-//                }
-//            }
+            if(i == firstChildIndex)
+            {
+                for(reattach = i, childIndex = 0; childIndex < degree; reattach++, childIndex++)
+                {
+                    ithParent.setChild(childIndex, treeNodes.get(reattach));
+                }
+            }
+            else
+            {
+                for(reattach = firstChildIndex, childIndex = 0; childIndex < degree; reattach++, childIndex++)
+                {
+                    ithParent.setChild(childIndex, treeNodes.get(reattach));
+                }
+            }
             
             currentNode = (OTree_Node)ithParent.getNeighbor();
             previousNode = ithParent;
