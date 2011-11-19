@@ -171,10 +171,12 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             ArrayList<OTree_Elem> unassigned = new ArrayList<OTree_Elem>();
             OTree_Elem[] children;
             
-            try{
+            try
+            {
                  signer.update(value);
                  newLeaf.setSig(signer.sign());
-            } catch (Exception e){}
+            } 
+            catch (SignatureException e){}
             
             degree = ithParent.getDegree();
             unassigned.add(ithParent.getChild(degree - 1));
