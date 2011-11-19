@@ -313,7 +313,6 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             OTree_Elem[] children;
             
             children = ithParent.getChildren();
-            //degree = ithNeighbor.getDegree();   
             
             if(ithNeighbor != null)
             {
@@ -418,19 +417,6 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
                     
                     root = newRoot;
                 }
-//                if(unassigned.size() > 0)
-//                {
-//                    OTree_Node newRoot = new OTree_Node();
-//                    OTree_Node oldRoot = root;
-//                    unassignedNode = unassigned.remove(0);
-//                    
-//                    newRoot.addChild(root);
-//                    newRoot.addChild(unassignedNode);
-//                    root.setParent(newRoot);
-//                    unassignedNode.setParent(newRoot);
-//                    
-//                    root = newRoot;                                        
-//                }
                 
                 ithParent = (OTree_Node)ithParent.getParent();
                 currentNode = ithParent;
@@ -439,79 +425,6 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             
             updateSig(root, signer);
             
-//            i = i - 1;
-//            OTree_Elem ithChild = treeNodes.get(i);
-//            OTree_Elem[] ithParentChildren;
-//            OTree_Node ithParent = (OTree_Node)ithChild.getParent();
-//            OTree_Node currentNode, neighbor;
-//            int w, randomDegree, oldDegree;
-//            ArrayList<OTree_Elem> toUpdate = new ArrayList<OTree_Elem>();
-//            
-//            while(ithParent.getParent() != null)
-//            {
-//                currentNode = ithParent;
-//                ithParentChildren = ithParent.getChildren();
-//                toUpdate.add(currentNode);
-//                
-//                for(int match = 0; match < ithParentChildren.length; i++)
-//                {
-//                    if(ithChild == ithParentChildren[i])
-//                    {
-//                        ithParent.removeChild(i);
-//                        break;
-//                    }
-//                }
-//                
-//                if(ithParent.getNeighbor() == null)
-//                {
-//                    if(!(ithParent.getDegree() < 1))
-//                    {
-//                        root = (OTree_Node)ithParent.getChild(0);
-//                    }
-//                }
-//                else
-//                {
-//                    w = 1;
-//                    
-//                    while(w > 0)
-//                    {
-//                        randomDegree = (rndSrc.nextBoolean()) ? 2 : 3;
-//                        neighbor = (OTree_Node)currentNode.getNeighbor();
-//                        oldDegree = neighbor.getDegree();
-//                        toUpdate.add(neighbor);
-//                        
-//                        if(w >= oldDegree)
-//                        {
-//                            OTree_Elem[] neighborChildren = neighbor.getChildren();
-//                            
-//                            for(int migrate = 0; migrate < neighborChildren.length; migrate++)
-//                            {
-//                                currentNode.addChild(neighborChildren[i]);
-//                                neighborChildren[i].setParent(currentNode);
-//                                neighbor.removeChild(0);
-//                            }
-//                            
-//                            w = 0;
-//                        }
-//                        else
-//                        {
-//                            for(int migrate = 0; migrate < w; migrate++)
-//                            {
-//                                currentNode.addChild(neighbor.getChild(0));
-//                                neighbor.getChild(0).setParent(currentNode);
-//                                neighbor.removeChild(0);
-//                            }
-//                            
-//                            w = randomDegree - oldDegree + w;
-//                        }
-//                    }
-//                }
-//                
-//                ithChild = ithParent;
-//                ithParent = (OTree_Node)ithParent.getParent();
-//            }
-//            // update signatures of all nodes touched in this operation
-//            updateSig(toUpdate, signer);
         }
         
 
