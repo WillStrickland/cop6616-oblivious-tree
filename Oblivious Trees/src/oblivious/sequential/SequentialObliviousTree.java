@@ -313,9 +313,13 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             OTree_Elem[] children;
             
             children = ithParent.getChildren();
-            degree = ithNeighbor.getDegree();            
-            unassigned.add(ithNeighbor.getChild(0));
-            ithNeighbor.removeChild(0);
+            //degree = ithNeighbor.getDegree();   
+            
+            if(ithNeighbor != null)
+            {
+                unassigned.add(ithNeighbor.getChild(0));
+                ithNeighbor.removeChild(0);
+            }
             
             for(int transfer1 = 0; transfer1 < children.length; transfer1++)
             {
