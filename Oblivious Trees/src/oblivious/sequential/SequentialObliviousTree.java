@@ -200,6 +200,11 @@ public class SequentialObliviousTree extends oblivious.ObliviousTree{
             treeNodes.add(i, newLeaf);
             
             firstChildIndex = treeNodes.indexOf(ithParent.getChild(0));
+            
+            if(firstChildIndex == -1)
+            {
+                firstChildIndex = treeNodes.indexOf(ithParent.getChild(ithParent.getDegree() - 1));
+            }
 
             if(i == firstChildIndex)
             {
