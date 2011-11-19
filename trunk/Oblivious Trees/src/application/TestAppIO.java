@@ -51,8 +51,12 @@ public class TestAppIO {
 	 *  @return list of Actions recorded in log file
 	 */
 	static List<Act> scanLogFile(Scanner txt){
-		// ignore first line
-		txt.nextLine();
+		// read & ignore first line
+		txt.next();		// file/test name
+		txt.nextInt();	// tree size (in leaf nodes)
+		txt.nextInt();	// number of actors
+		txt.nextInt();	// total number of actions performed
+		txt.nextLong();	// elapsed test time
 		// read in and return all remaining actions
 		return scanActs(txt);
 	}
