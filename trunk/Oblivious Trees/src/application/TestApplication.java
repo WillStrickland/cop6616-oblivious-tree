@@ -139,7 +139,7 @@ public class TestApplication {
 		//TestAppIO.testActMethods_scanAct();
 		//TestAppIO.testActMethods_scanByteArray();
 		//testObliviousMethods();
-		randomTests(false);
+		randomTests(true);
 		//scriptedTests(false);
 		System.out.println("Main end");
 	}
@@ -153,28 +153,30 @@ public class TestApplication {
 		// set tree sizes
 		List<Integer> treeSizes = new ArrayList<Integer>();
 		//treeSizes.add(Integer.valueOf(10));
-		//treeSizes.add(Integer.valueOf(100));
+		treeSizes.add(Integer.valueOf(100));
 		treeSizes.add(Integer.valueOf(1000));
 		treeSizes.add(Integer.valueOf(5000));
 		//treeSizes.add(Integer.valueOf(10000));
 		// set actor counts
 		List<Integer> actorCnts = new ArrayList<Integer>();
 		//actorCnts.add(Integer.valueOf(1));
-		//actorCnts.add(Integer.valueOf(2));
-		//actorCnts.add(Integer.valueOf(4));
+		actorCnts.add(Integer.valueOf(2));
+		actorCnts.add(Integer.valueOf(4));
 		actorCnts.add(Integer.valueOf(8));
-		//actorCnts.add(Integer.valueOf(16));
-		//actorCnts.add(Integer.valueOf(32));
+		actorCnts.add(Integer.valueOf(16));
+		actorCnts.add(Integer.valueOf(32));
 		// set action counts
 		List<Integer> actionCnts = new ArrayList<Integer>();
 		//actionCnts.add(Integer.valueOf(1));
 		//actionCnts.add(Integer.valueOf(5));
 		//actionCnts.add(Integer.valueOf(10));
 		actionCnts.add(Integer.valueOf(25));
-		//actionCnts.add(Integer.valueOf(50));
-		//actionCnts.add(Integer.valueOf(100));
+		actionCnts.add(Integer.valueOf(50));
+		actionCnts.add(Integer.valueOf(100));
+		actionCnts.add(Integer.valueOf(500));
+		//actionCnts.add(Integer.valueOf(1000));
 		// set number of trials to do with each configuration
-		int trials = 1;
+		int trials = 10;
 		// in case summary, create single output file
 		BufferedWriter summaryOut = null;
 		if (summary){
@@ -503,12 +505,6 @@ public class TestApplication {
 	 */
 	public Act buttonMash(){
 		Act a = new Act();
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		// Roll for random action
 		int act = rnd.nextInt(11); //!!! should be nextInt(11)
 		if (act>=0 && act<=4){
@@ -523,7 +519,7 @@ public class TestApplication {
 			a.setData(chunk);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do insert
-			//this.tree.insert(chunk, i, this.signatures[0]);
+			this.tree.insert(chunk, i, this.signatures[0]);
 		} else if (act>=5 && act<=9){
 			// position to insert
 			int i = this.rnd.nextInt(this.tree.getSize()+1);
@@ -532,13 +528,13 @@ public class TestApplication {
 			a.setLocation(i);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do delete
-			//this.tree.delete(i, this.signatures[0]);
+			this.tree.delete(i, this.signatures[0]);
 		} else if (act>=10 && act<=10){
 			// set act parameters
 			a.setOperation(OpType.GENSIG);
 			a.setTime(System.currentTimeMillis()-this.startTime);
 			// do generate signatures
-			//this.tree.signatureGenerate();
+			this.tree.signatureGenerate();
 		}
 		return a;
 	}
@@ -548,24 +544,18 @@ public class TestApplication {
 	public Act buttonPush(Act a){
 		Act b = a.clone();
 		b.setTime(System.currentTimeMillis()-this.startTime);
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		switch (a.getOperation()){
 			case INSERT:
 				// do insert
-				//this.tree.insert(a.getData(), a.getLocation(), this.signatures[0]);
+				this.tree.insert(a.getData(), a.getLocation(), this.signatures[0]);
 				break;
 			case DELETE:
 				// do delete
-				//this.tree.delete(a.getLocation(), this.signatures[0]);
+				this.tree.delete(a.getLocation(), this.signatures[0]);
 				break;
 			case GENSIG:
 				// do gensig
-				//this.tree.signatureGenerate();
+				this.tree.signatureGenerate();
 				break;
 			default:
 				break;
