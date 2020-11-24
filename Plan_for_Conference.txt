@@ -1,0 +1,15 @@
+Conference:	24th ACM Symposium on Parallelism in Algorithms and Architectures (SPAA 2012)
+Website:	http://www.cs.jhu.edu/~spaa/
+Submission Deadlines:
+	Abstracts:		January 25 (11:59 pm EST)
+    Full papers:	February 1 (11:59 pm EST)
+	
+We plan on making a submission to the aforementioned ACM Symposium on November 25th, 2011, a week after the final
+submission of our research paper detailing the results of our R&D efforts. We chose this conference principally because the topic 
+is the most relevant in regards to our subject. Most of the other ACM conferences that we researched fell outside 
+of our scope. One alternative choice was the ACM Symposium on the Theory of Computing (STOC 2012), however the submission 
+deadline of November 2nd does not leave us enough room for a full examination of our research topic and a final critique by you.
+
+What we expect to see, and what our submission will detail, is the significantly improved performance of our concurrent
+implementation of this oblivious data structure versus the sequential version as the number of threads increases. We
+also expect to see competitive performance when compared to contemporary non-incremental digital signature schemes.
